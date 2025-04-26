@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 pub mod string_model;
 
 pub trait FromUnchecked<T> {
