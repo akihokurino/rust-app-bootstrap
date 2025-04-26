@@ -60,6 +60,7 @@ fn generate_id_str() -> String {
     base_62::encode(&random::<[u8; 16]>())
 }
 
+#[allow(unused)]
 trait FromUnchecked<T> {
     fn from_unchecked(value: T) -> Self;
 }
@@ -67,7 +68,7 @@ trait FromUnchecked<T> {
 #[allow(unused)]
 macro_rules! define_len_restricted_string_model {
     ($typ:ident, $display_name:literal, $min:literal, $max:literal) => {
-        $crate::model::define_string_model!($typ);
+        $crate::types::define_string_model!($typ);
         impl std::convert::TryFrom<String> for $typ {
             type Error = String;
             fn try_from(v: String) -> std::result::Result<Self, Self::Error> {
@@ -121,7 +122,7 @@ macro_rules! define_string_model {
                 &self.0
             }
         }
-        impl crate::model::FromUnchecked<String> for $typ {
+        impl crate::types::FromUnchecked<String> for $typ {
             fn from_unchecked(value: String) -> Self {
                 Self(value)
             }

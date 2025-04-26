@@ -10,11 +10,11 @@ use actix_web::HttpRequest;
 use async_graphql::{Context, EmptySubscription};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;
-use domain::error::AppError;
-use domain::error::Kind::{BadRequest, Unauthorized};
+use domain::errors::AppError;
+use domain::errors::Kind::{BadRequest, Unauthorized};
 use domain::AppResult;
 
-type AuthorizedUserId = domain::model::user::Id;
+type AuthorizedUserId = domain::types::user::Id;
 
 #[async_trait]
 trait AppContext {
@@ -74,7 +74,7 @@ impl HttpHandler {
 }
 
 async fn verify_token(hv: &HeaderValue) -> AppResult<AuthorizedUserId> {
-    let token_str = hv
+    let _token_str = hv
         .to_str()
         .map_err(BadRequest.from_srcf())?
         .strip_prefix("Bearer ")

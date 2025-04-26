@@ -1,6 +1,4 @@
-use actix_web::dev::ServiceFactory;
-
 pub mod api;
-pub mod error;
+pub mod errors;
 
-pub type GraphResult<T> = Result<T, error::Error>;
+pub type GraphResult<T> = Result<T, errors::Error>;

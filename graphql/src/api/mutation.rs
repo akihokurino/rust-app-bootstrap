@@ -11,7 +11,7 @@ pub struct DefaultMutation;
 #[Object]
 impl DefaultMutation {
     async fn user_create(&self, ctx: &Context<'_>, input: UserCreateInput) -> GraphResult<Me> {
-        let ud = ctx.verified_user_id()?;
+        let uid = ctx.verified_user_id()?;
         unimplemented!()
     }
 }

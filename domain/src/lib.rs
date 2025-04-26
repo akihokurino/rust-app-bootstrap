@@ -1,6 +1,6 @@
-use crate::error::AppError;
+use crate::errors::AppError;
 
-pub mod error;
-pub mod model;
+pub mod errors;
+pub mod types;
 
 pub type AppResult<T> = Result<T, AppError>;

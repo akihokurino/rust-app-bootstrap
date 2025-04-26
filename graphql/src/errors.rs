@@ -1,7 +1,7 @@
 use async_graphql::{ErrorExtensions, FieldError};
 use derive_more::From;
-use domain::error::AppError;
-use domain::error::Kind::*;
+use domain::errors::AppError;
+use domain::errors::Kind::*;
 use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 

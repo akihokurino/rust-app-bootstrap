@@ -1,7 +1,7 @@
 use async_graphql::{Object, ID};
 
 #[derive(Debug, Clone)]
-pub struct Me(domain::model::user::User);
+pub struct Me(domain::types::user::User);
 #[Object]
 impl Me {
     async fn id(&self) -> ID {
