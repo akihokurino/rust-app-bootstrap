@@ -1,14 +1,6 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use actix_web::dev::ServiceFactory;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod api;
+pub mod error;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub type GraphResult<T> = Result<T, error::Error>;

@@ -1021,13 +1021,12 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 name = "graphql"
 version = "0.1.0"
 dependencies = [
- "actix-cors",
  "actix-web",
  "async-graphql",
  "async-graphql-actix-web",
- "async-graphql-value",
  "async-trait",
- "tokio",
+ "derive_more",
+ "domain",
 ]
 
 [[package]]
@@ -1741,7 +1740,11 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 name = "rust-app-bootstrap"
 version = "0.1.0"
 dependencies = [
- "domain",
+ "actix-cors",
+ "actix-web",
+ "async-graphql",
+ "async-graphql-actix-web",
+ "graphql",
 ]
 
 [[package]]
@@ -2086,19 +2089,7 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
- "tokio-macros",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "tokio-macros"
-version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e06d43f1345a3bcd39f6a56dbb7dcab2ba47e68e8ac134855e7e2bdbaf8cab8"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.100",
 ]
 
 [[package]]

@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-domain = { path = "domain" }
+graphql = { path = "graphql" }
+actix-web = "4"
+actix-cors = "0.7"
+async-graphql = "7"
+async-graphql-actix-web = "7"
 
 [workspace]
 resolver = "3"

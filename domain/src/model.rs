@@ -1,5 +1,5 @@
-mod time;
-mod user;
+pub mod time;
+pub mod user;
 
 use rand::random;
 use std::marker::PhantomData;
