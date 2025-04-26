@@ -107,9 +107,9 @@ impl From<Kind> for AppError {
 #[allow(unused)]
 macro_rules! impl_from_err_to_app_internal_err {
     ($T:ty) => {
-        impl From<$T> for crate::errors::AppError {
+        impl From<$T> for crate::error::AppError {
             fn from(v: $T) -> Self {
-                crate::errors::Kind::Internal.from_src(v)
+                crate::error::Kind::Internal.from_src(v)
             }
         }
     };

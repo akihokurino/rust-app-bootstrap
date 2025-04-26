@@ -1,0 +1,13 @@
+[package]
+name = "graphql"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1.77"
+actix-web = "4"
+actix-cors = "0.7.0"
+async-graphql = { version = "7", features = ["dataloader", "log", "tracing"] }
+async-graphql-actix-web = "7"
+async-graphql-value = "7"

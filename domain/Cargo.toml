@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 derive_more = { version = "2", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
+base-62 = "0.1"
+rand = "0.9"
