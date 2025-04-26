@@ -1,0 +1,13 @@
+[package]
+name = "rust-app-bootstrap"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { path = "domain" }
+
+[workspace]
+resolver = "3"
+members = [
+    "domain"
+]
