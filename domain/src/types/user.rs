@@ -1,6 +1,7 @@
+use crate::macros::string_model::define_len_restricted_string_model;
 use crate::types;
 use crate::types::time::LocalDateTime;
-use crate::types::{define_len_restricted_string_model, HasId};
+use crate::types::HasId;
 
 pub type Id = types::Id<User>;
 #[derive(Debug, Clone)]
