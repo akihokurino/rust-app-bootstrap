@@ -12,6 +12,14 @@ pub struct DefaultQuery;
 impl DefaultQuery {
     async fn me(&self, ctx: &Context<'_>) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
-        unimplemented!()
+
+        // TODO: implement
+        let user = domain::types::user::User {
+            id: uid.clone(),
+            name: domain::types::user::Name::try_from("sample".to_string()).unwrap(),
+            created_at: domain::types::time::now(),
+            updated_at: domain::types::time::now(),
+        };
+        Ok(user.into())
     }
 }

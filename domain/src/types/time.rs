@@ -23,3 +23,7 @@ impl ParseFromRfc3339<Self> for LocalDateTime {
             })
     }
 }
+
+pub fn now() -> LocalDateTime {
+    Local::now()
+}

@@ -1023,6 +1023,7 @@ dependencies = [
  "actix-web",
  "async-graphql",
  "async-graphql-actix-web",
+ "async-graphql-value",
  "async-trait",
  "derive_more",
  "domain",
