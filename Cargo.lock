@@ -776,7 +776,6 @@ dependencies = [
  "chrono",
  "derive_more",
  "rand",
- "serde",
  "unicode-segmentation",
 ]
 

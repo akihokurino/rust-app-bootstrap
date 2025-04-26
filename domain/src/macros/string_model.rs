@@ -36,7 +36,7 @@ pub(crate) use define_len_restricted_string_model;
 
 macro_rules! define_string_model {
     ($typ:ident) => {
-        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Eq, PartialEq)]
+        #[derive(Debug, Clone, Eq, PartialEq)]
         pub struct $typ(String);
         impl std::fmt::Display for $typ {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

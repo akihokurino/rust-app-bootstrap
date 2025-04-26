@@ -2,9 +2,8 @@ use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 
 use derive_more::Display;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Display, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Display)]
 pub enum Kind {
     BadRequest,
     Unauthorized,
