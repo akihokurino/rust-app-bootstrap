@@ -43,13 +43,12 @@ pub struct HttpHandler {
 
 impl HttpHandler {
     pub async fn new() -> Self {
-        let mut schema = Schema::build(
+        let schema = Schema::build(
             QueryRoot::default(),
             MutationRoot::default(),
             EmptySubscription,
-        );
-
-        let schema = schema.finish();
+        )
+        .finish();
 
         HttpHandler { schema }
     }

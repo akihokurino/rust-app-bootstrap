@@ -28,6 +28,8 @@ impl Order {
         let detail = domain::types::order::detail::Detail {
             id: domain::types::order::detail::Id::generate(),
             order_id: domain::types::order::Id::generate(),
+            product_name: domain::types::order::detail::Name::try_from("sample".to_string())
+                .unwrap(),
             quantity: 1,
             created_at: domain::types::time::now(),
             updated_at: domain::types::time::now(),
@@ -61,6 +63,10 @@ impl OrderDetail {
             updated_at: domain::types::time::now(),
         };
         Ok(Order::from(order))
+    }
+
+    async fn product_name(&self) -> String {
+        self.0.product_name.to_string()
     }
 
     async fn quantity(&self) -> u32 {

@@ -1,2 +1,2 @@
-mod order;
+pub mod order;
 pub mod user;
