@@ -14,7 +14,7 @@ use domain::errors::AppError;
 use domain::errors::Kind::{BadRequest, Unauthorized};
 use domain::AppResult;
 
-type AuthorizedUserId = domain::types::user::Id;
+type AuthorizedUserId = domain::models::user::Id;
 
 #[async_trait]
 trait AppContext {

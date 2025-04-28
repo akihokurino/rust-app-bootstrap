@@ -16,11 +16,11 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
 
         // TODO: implement
-        let user = domain::types::user::User {
+        let user = domain::models::user::User {
             id: uid.clone(),
             name: input.name.try_into().map_err(BadRequest.withf())?,
-            created_at: domain::types::time::now(),
-            updated_at: domain::types::time::now(),
+            created_at: domain::models::time::now(),
+            updated_at: domain::models::time::now(),
         };
         Ok(user.into())
     }
@@ -33,11 +33,11 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
 
         // TODO: implement
-        let order = domain::types::order::Order {
-            id: domain::types::order::Id::generate(),
+        let order = domain::models::order::Order {
+            id: domain::models::order::Id::generate(),
             user_id: uid.clone(),
-            created_at: domain::types::time::now(),
-            updated_at: domain::types::time::now(),
+            created_at: domain::models::time::now(),
+            updated_at: domain::models::time::now(),
         };
         Ok(order.into())
     }

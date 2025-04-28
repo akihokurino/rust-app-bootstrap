@@ -1,7 +1,7 @@
 use crate::schema::users;
 use diesel::prelude::*;
-use domain::types::time::LocalDateTime;
-use domain::types::user::User;
+use domain::models::time::LocalDateTime;
+use domain::models::user::User;
 
 #[derive(Queryable, Selectable, Insertable)]
 #[diesel(table_name = users)]
@@ -15,7 +15,7 @@ impl TryFrom<UserModel> for User {
     type Error = String;
     fn try_from(v: UserModel) -> Result<Self, Self::Error> {
         Ok(Self {
-            id: domain::types::user::Id::from(v.id.clone()),
+            id: domain::models::user::Id::from(v.id.clone()),
             name: v.name.try_into()?,
             created_at: v.created_at,
             updated_at: v.updated_at,

@@ -1,10 +1,10 @@
 use crate::macros::string_model::define_len_restricted_string_model;
-use crate::types;
-use crate::types::order::Order;
-use crate::types::time::{now, LocalDateTime};
-use crate::types::{order, HasId};
+use crate::models;
+use crate::models::order::Order;
+use crate::models::time::{now, LocalDateTime};
+use crate::models::{order, HasId};
 
-pub type Id = types::Id<Detail>;
+pub type Id = models::Id<Detail>;
 #[derive(Debug, Clone)]
 pub struct Detail {
     pub id: Id,
@@ -27,7 +27,7 @@ impl Detail {
     }
 }
 impl HasId for Detail {
-    fn id(&self) -> &types::Id<Self> {
+    fn id(&self) -> &models::Id<Self> {
         &self.id
     }
 }

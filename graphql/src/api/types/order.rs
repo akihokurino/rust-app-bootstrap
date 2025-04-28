@@ -5,7 +5,7 @@ use async_graphql::{Object, ID};
 use derive_more::From;
 
 #[derive(Debug, Clone, From)]
-pub struct Order(domain::types::order::Order);
+pub struct Order(domain::models::order::Order);
 #[Object]
 impl Order {
     async fn id(&self) -> ID {
@@ -14,25 +14,25 @@ impl Order {
 
     async fn user(&self) -> GraphResult<User> {
         // TODO: implement
-        let user = domain::types::user::User {
-            id: domain::types::user::Id::generate(),
-            name: domain::types::user::Name::try_from("sample".to_string()).unwrap(),
-            created_at: domain::types::time::now(),
-            updated_at: domain::types::time::now(),
+        let user = domain::models::user::User {
+            id: domain::models::user::Id::generate(),
+            name: domain::models::user::Name::try_from("sample".to_string()).unwrap(),
+            created_at: domain::models::time::now(),
+            updated_at: domain::models::time::now(),
         };
         Ok(User::from(user))
     }
 
     async fn details(&self) -> GraphResult<Vec<OrderDetail>> {
         // TODO: implement
-        let detail = domain::types::order::detail::Detail {
-            id: domain::types::order::detail::Id::generate(),
-            order_id: domain::types::order::Id::generate(),
-            product_name: domain::types::order::detail::Name::try_from("sample".to_string())
+        let detail = domain::models::order::detail::Detail {
+            id: domain::models::order::detail::Id::generate(),
+            order_id: domain::models::order::Id::generate(),
+            product_name: domain::models::order::detail::Name::try_from("sample".to_string())
                 .unwrap(),
             quantity: 1,
-            created_at: domain::types::time::now(),
-            updated_at: domain::types::time::now(),
+            created_at: domain::models::time::now(),
+            updated_at: domain::models::time::now(),
         };
         Ok(vec![OrderDetail::from(detail)])
     }
@@ -47,7 +47,7 @@ impl Order {
 }
 
 #[derive(Debug, Clone, From)]
-pub struct OrderDetail(domain::types::order::detail::Detail);
+pub struct OrderDetail(domain::models::order::detail::Detail);
 #[Object]
 impl OrderDetail {
     async fn id(&self) -> ID {
@@ -56,11 +56,11 @@ impl OrderDetail {
 
     async fn order(&self) -> GraphResult<Order> {
         // TODO: implement
-        let order = domain::types::order::Order {
-            id: domain::types::order::Id::generate(),
-            user_id: domain::types::user::Id::generate(),
-            created_at: domain::types::time::now(),
-            updated_at: domain::types::time::now(),
+        let order = domain::models::order::Order {
+            id: domain::models::order::Id::generate(),
+            user_id: domain::models::user::Id::generate(),
+            created_at: domain::models::time::now(),
+            updated_at: domain::models::time::now(),
         };
         Ok(Order::from(order))
     }

@@ -1,11 +1,11 @@
 pub mod detail;
 
-use crate::types;
-use crate::types::time::{now, LocalDateTime};
-use crate::types::user::User;
-use crate::types::{user, HasId};
+use crate::models;
+use crate::models::time::{now, LocalDateTime};
+use crate::models::user::User;
+use crate::models::{user, HasId};
 
-pub type Id = types::Id<Order>;
+pub type Id = models::Id<Order>;
 #[derive(Debug, Clone)]
 pub struct Order {
     pub id: Id,
@@ -24,7 +24,7 @@ impl Order {
     }
 }
 impl HasId for Order {
-    fn id(&self) -> &types::Id<Self> {
+    fn id(&self) -> &models::Id<Self> {
         &self.id
     }
 }

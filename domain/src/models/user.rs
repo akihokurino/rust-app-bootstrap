@@ -1,9 +1,9 @@
 use crate::macros::string_model::define_len_restricted_string_model;
-use crate::types;
-use crate::types::time::{now, LocalDateTime};
-use crate::types::HasId;
+use crate::models;
+use crate::models::time::{now, LocalDateTime};
+use crate::models::HasId;
 
-pub type Id = types::Id<User>;
+pub type Id = models::Id<User>;
 #[derive(Debug, Clone)]
 pub struct User {
     pub id: Id,
@@ -22,7 +22,7 @@ impl User {
     }
 }
 impl HasId for User {
-    fn id(&self) -> &types::Id<Self> {
+    fn id(&self) -> &models::Id<Self> {
         &self.id
     }
 }
