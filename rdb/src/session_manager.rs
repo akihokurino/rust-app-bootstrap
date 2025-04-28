@@ -5,6 +5,7 @@ use domain::errors::Kind::Internal;
 use domain::AppResult;
 use std::env;
 
+#[derive(Debug, Clone)]
 pub struct SessionManager {
     pool: Pool<ConnectionManager<PgConnection>>,
 }
@@ -19,8 +20,8 @@ impl SessionManager {
     }
 
     pub fn from_env() -> AppResult<Self> {
-        let database_url = env::var("DATABASE_URL")
-            .map_err(|_| Internal.with("DATABASE_URLが設定されていません"))?;
+        let database_url =
+            env::var("DATABASE_URL").map_err(|_| Internal.with("Failed for database url"))?;
         Self::new(&database_url)
     }
 

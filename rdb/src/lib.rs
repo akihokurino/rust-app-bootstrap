@@ -5,6 +5,7 @@ mod schema;
 mod session_manager;
 mod types;
 
+#[derive(Debug, Clone)]
 pub struct Resolver {
     pub session_manager: session_manager::SessionManager,
     pub user_repository: types::user::UserRepository,
@@ -12,7 +13,7 @@ pub struct Resolver {
 
 static RESOLVER: OnceCell<Resolver> = OnceCell::new();
 
-pub fn resolver() -> AppResult<&'static Resolver> {
+pub async fn resolver() -> AppResult<&'static Resolver> {
     RESOLVER.get_or_try_init(|| {
         let session_manager = session_manager::SessionManager::from_env()?;
         let user_repository = types::user::UserRepository {};

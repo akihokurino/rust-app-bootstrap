@@ -43,11 +43,16 @@ pub struct HttpHandler {
 
 impl HttpHandler {
     pub async fn new() -> Self {
+        let rdb_resolver = rdb::resolver()
+            .await
+            .expect("Failed to initialize rdb resolver")
+            .clone();
         let schema = Schema::build(
             QueryRoot::default(),
             MutationRoot::default(),
             EmptySubscription,
         )
+        .data(rdb_resolver)
         .finish();
 
         HttpHandler { schema }

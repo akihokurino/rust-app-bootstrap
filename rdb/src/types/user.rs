@@ -35,6 +35,7 @@ impl Into<UserModel> for User {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct UserRepository {}
 impl UserRepository {
     pub fn find(&self, conn: &mut PgConnection) -> AppResult<Vec<User>> {

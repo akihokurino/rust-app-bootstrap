@@ -6,6 +6,8 @@ use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::dotenv().ok();
+
     let api_http_handler = graphql::api::HttpHandler::new().await;
     let port = 8080; // Default port
 

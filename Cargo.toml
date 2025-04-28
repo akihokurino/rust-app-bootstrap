@@ -9,6 +9,7 @@ actix-web = "4"
 actix-cors = "0.7"
 async-graphql = "7"
 async-graphql-actix-web = "7"
+dotenv = "0.15"
 
 [workspace]
 resolver = "3"

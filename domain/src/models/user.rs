@@ -20,6 +20,14 @@ impl User {
             updated_at: now(),
         }
     }
+
+    pub fn update(self, name: Name) -> Self {
+        Self {
+            name,
+            updated_at: now(),
+            ..self
+        }
+    }
 }
 impl HasId for User {
     fn id(&self) -> &models::Id<Self> {
