@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+rdb = { path = "../rdb" }
 domain = { path = "../domain" }
 async-trait = "0.1"
 actix-web = "4"
