@@ -1,0 +1,10 @@
+[package]
+name = "rdb"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { path = "../domain" }
+diesel = { version = "2", features = ["postgres", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.16.0", features = ["v4"] }

@@ -14,5 +14,6 @@ async-graphql-actix-web = "7"
 resolver = "3"
 members = [
     "domain",
-    "graphql"
+    "graphql",
+    "rdb"
 ]
