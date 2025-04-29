@@ -5,6 +5,7 @@ use crate::shared::types::BoolPayload;
 use crate::GraphResult;
 use async_graphql::{Context, InputObject, MergedObject, Object};
 use domain::errors::Kind::BadRequest;
+use domain::AppResult;
 
 #[derive(MergedObject, Default)]
 pub struct MutationRoot(DefaultMutation);
@@ -57,20 +58,39 @@ impl DefaultMutation {
         Ok(true.into())
     }
 
-    async fn order_create(
-        &self,
-        ctx: &Context<'_>,
-        _input: OrderCreateInput,
-    ) -> GraphResult<Order> {
+    async fn order_create(&self, ctx: &Context<'_>, input: OrderCreateInput) -> GraphResult<Order> {
         let uid = ctx.verified_user_id()?;
+        let rdb_resolver = ctx.data::<rdb::Resolver>()?;
 
-        // TODO: implement
-        let order = domain::models::order::Order {
-            id: domain::models::order::Id::generate(),
-            user_id: uid.clone(),
-            created_at: domain::models::time::now(),
-            updated_at: domain::models::time::now(),
-        };
+        let me = rdb_resolver
+            .session_manager
+            .read(|conn| rdb_resolver.user_repository.get(conn, &uid))?;
+        let order = domain::models::order::Order::new(&me);
+        let details = input
+            .details
+            .into_iter()
+            .map(|d| {
+                let name: domain::models::order::detail::Name =
+                    match d.name.try_into().map_err(BadRequest.withf()) {
+                        Ok(name) => name,
+                        Err(_) => {
+                            return Err(BadRequest.with("Invalid product name"));
+                        }
+                    };
+                Ok(domain::models::order::detail::Detail::new(
+                    &order, name, d.quantity,
+                ))
+            })
+            .collect::<AppResult<Vec<domain::models::order::detail::Detail>>>()?;
+
+        rdb_resolver.session_manager.transaction(|conn| {
+            rdb_resolver.order_repository.insert(conn, order.clone())?;
+            for detail in details {
+                rdb_resolver.order_detail_repository.insert(conn, detail)?;
+            }
+            Ok(())
+        })?;
+
         Ok(order.into())
     }
 }

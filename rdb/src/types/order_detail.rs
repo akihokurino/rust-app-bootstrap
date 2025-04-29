@@ -51,7 +51,7 @@ impl_repository!(
     order_details::id
 );
 impl_repository_insert!(
-    OrderDetailModel,
+    OrderDetailRepository,
     order_details::table,
     OrderDetailModel,
     Detail
