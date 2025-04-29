@@ -1,6 +1,4 @@
-use crate::macros::repository::{
-    impl_repository, impl_repository_delete, impl_repository_insert, impl_repository_update,
-};
+use crate::macros::repository::{impl_repository, impl_repository_insert};
 use crate::schema::orders;
 use diesel::prelude::*;
 use domain::errors::Kind::Internal;
@@ -10,7 +8,7 @@ use domain::AppResult;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name = orders)]
-pub struct OrderModel {
+struct OrderModel {
     pub id: String,
     pub user_id: String,
     pub created_at: LocalDateTime,
@@ -47,12 +45,4 @@ impl_repository!(
     orders::id
 );
 impl_repository_insert!(OrderRepository, orders::table, OrderModel, Order);
-impl_repository_update!(
-    OrderRepository,
-    orders::table,
-    OrderModel,
-    Order,
-    orders::id
-);
-impl_repository_delete!(OrderRepository, orders::table, Id, orders::id);
 impl OrderRepository {}

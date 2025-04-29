@@ -10,7 +10,7 @@ use domain::AppResult;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name = users)]
-pub struct UserModel {
+struct UserModel {
     pub id: String,
     pub name: String,
     pub created_at: LocalDateTime,
@@ -20,7 +20,7 @@ impl TryFrom<UserModel> for User {
     type Error = String;
     fn try_from(v: UserModel) -> Result<Self, Self::Error> {
         Ok(Self {
-            id: domain::models::user::Id::from(v.id.clone()),
+            id: domain::models::user::Id::from(v.id),
             name: v.name.try_into()?,
             created_at: v.created_at,
             updated_at: v.updated_at,
