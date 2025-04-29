@@ -1,6 +1,7 @@
 use domain::AppResult;
 use once_cell::sync::OnceCell;
 
+mod macros;
 mod schema;
 mod session_manager;
 mod types;

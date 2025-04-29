@@ -1,4 +1,4 @@
-use crate::macros::string_model::define_len_restricted_string_model;
+use crate::macros::string_model::impl_len_restricted_string_model;
 use crate::models;
 use crate::models::order::Order;
 use crate::models::time::{now, LocalDateTime};
@@ -32,4 +32,4 @@ impl HasId for Detail {
     }
 }
 
-define_len_restricted_string_model!(Name, "商品名", 1, 255);
+impl_len_restricted_string_model!(Name, "商品名", 1, 255);

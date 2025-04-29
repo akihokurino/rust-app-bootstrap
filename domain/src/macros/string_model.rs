@@ -1,6 +1,6 @@
-macro_rules! define_len_restricted_string_model {
+macro_rules! impl_len_restricted_string_model {
     ($typ:ident, $display_name:literal, $min:literal, $max:literal) => {
-        $crate::macros::string_model::define_string_model!($typ);
+        $crate::macros::string_model::impl_string_model!($typ);
 
         impl std::convert::TryFrom<String> for $typ {
             type Error = String;
@@ -32,9 +32,9 @@ macro_rules! define_len_restricted_string_model {
         }
     };
 }
-pub(crate) use define_len_restricted_string_model;
+pub(crate) use impl_len_restricted_string_model;
 
-macro_rules! define_string_model {
+macro_rules! impl_string_model {
     ($typ:ident) => {
         #[derive(Debug, Clone, Eq, PartialEq)]
         pub struct $typ(String);
@@ -60,4 +60,4 @@ macro_rules! define_string_model {
         }
     };
 }
-pub(crate) use define_string_model;
+pub(crate) use impl_string_model;

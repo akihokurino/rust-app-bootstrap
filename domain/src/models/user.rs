@@ -1,4 +1,4 @@
-use crate::macros::string_model::define_len_restricted_string_model;
+use crate::macros::string_model::impl_len_restricted_string_model;
 use crate::models;
 use crate::models::time::{now, LocalDateTime};
 use crate::models::HasId;
@@ -35,4 +35,4 @@ impl HasId for User {
     }
 }
 
-define_len_restricted_string_model!(Name, "ユーザー名", 1, 255);
+impl_len_restricted_string_model!(Name, "ユーザー名", 1, 255);

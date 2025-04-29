@@ -1,3 +1,6 @@
+use crate::macros::repository::{
+    impl_repository, impl_repository_delete, impl_repository_insert, impl_repository_update,
+};
 use crate::schema::users;
 use diesel::prelude::*;
 use domain::errors::Kind::Internal;
@@ -35,49 +38,8 @@ impl Into<UserModel> for User {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct UserRepository {}
-impl UserRepository {
-    pub fn find(&self, conn: &mut PgConnection) -> AppResult<Vec<User>> {
-        let users = users::table
-            .load::<UserModel>(conn)
-            .map_err(Internal.from_srcf())?;
-        users
-            .into_iter()
-            .map(|v| v.try_into().map_err(|v| Internal.with(v)))
-            .collect::<AppResult<Vec<User>>>()
-    }
-
-    pub fn get(&self, conn: &mut PgConnection, id: &Id) -> AppResult<User> {
-        let user = users::table
-            .filter(users::id.eq(id.as_str()))
-            .first::<UserModel>(conn)
-            .map_err(Internal.from_srcf())?;
-        user.try_into().map_err(|v| Internal.with(v))
-    }
-
-    pub fn insert(&self, conn: &mut PgConnection, user: User) -> AppResult<()> {
-        let user: UserModel = user.into();
-        diesel::insert_into(users::table)
-            .values(&user)
-            .execute(conn)
-            .map_err(Internal.from_srcf())?;
-        Ok(())
-    }
-
-    pub fn update(&self, conn: &mut PgConnection, user: User) -> AppResult<()> {
-        let user: UserModel = user.into();
-        diesel::update(users::table.filter(users::id.eq(user.id.clone())))
-            .set(&user)
-            .execute(conn)
-            .map_err(Internal.from_srcf())?;
-        Ok(())
-    }
-
-    pub fn delete(&self, conn: &mut PgConnection, id: &Id) -> AppResult<()> {
-        diesel::delete(users::table.filter(users::id.eq(id.as_str())))
-            .execute(conn)
-            .map_err(Internal.from_srcf())?;
-        Ok(())
-    }
-}
+impl_repository!(UserRepository, users::table, UserModel, User, Id, users::id);
+impl_repository_insert!(UserRepository, users::table, UserModel, User);
+impl_repository_update!(UserRepository, users::table, UserModel, User, users::id);
+impl_repository_delete!(UserRepository, users::table, Id, users::id);
+impl UserRepository {}
