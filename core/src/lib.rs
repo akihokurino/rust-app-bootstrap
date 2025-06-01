@@ -1,14 +1,6 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use crate::errors::AppError;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod domain;
+pub mod errors;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub type AppResult<T> = Result<T, AppError>;
