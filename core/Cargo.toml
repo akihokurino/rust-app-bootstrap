@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres"] }
 derive_more = { version = "2", features = ["full"] }
 base-62 = "0.1"
 rand = "0.9"
