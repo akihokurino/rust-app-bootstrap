@@ -1,8 +1,8 @@
-mod detail;
+pub mod detail;
 
 use crate::domain::time::{now, LocalDateTime};
-use crate::domain::{user, HasId};
 use crate::domain::user::User;
+use crate::domain::{user, HasId};
 
 pub type Id = crate::domain::Id<Order>;
 #[derive(Debug, Clone)]

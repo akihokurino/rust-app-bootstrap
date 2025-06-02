@@ -1,6 +1,6 @@
-use crate::domain::HasId;
 use crate::domain::string::impl_len_restricted_string_model;
 use crate::domain::time::{now, LocalDateTime};
+use crate::domain::HasId;
 
 pub type Id = crate::domain::Id<User>;
 #[derive(Debug, Clone)]

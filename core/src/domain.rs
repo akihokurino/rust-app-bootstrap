@@ -1,7 +1,7 @@
-mod order;
-mod user;
-mod time;
-mod string;
+pub mod order;
+pub mod string;
+pub mod time;
+pub mod user;
 
 use rand::random;
 use std::collections::HashMap;
