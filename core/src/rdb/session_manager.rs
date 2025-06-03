@@ -1,8 +1,9 @@
 use crate::errors::Kind::Internal;
 use crate::AppResult;
 use sqlx::postgres::{PgPool, PgPoolOptions};
-use sqlx::{Acquire, Postgres, Transaction};
+use sqlx::Acquire;
 use std::env;
+use std::ops::DerefMut;
 
 #[derive(Debug, Clone)]
 pub struct SessionManager {
@@ -26,42 +27,22 @@ impl SessionManager {
         Self::new(&database_url).await
     }
 
+    // プールの参照を直接返すメソッド
+    pub fn pool(&self) -> &PgPool {
+        &self.pool
+    }
+
     pub async fn transaction<F, T, Fut>(&self, f: F) -> AppResult<T>
     where
-        F: FnOnce(&mut Transaction<'_, Postgres>) -> Fut,
+        F: for<'a> FnOnce(&'a mut sqlx::PgConnection) -> Fut,
         Fut: Future<Output = AppResult<T>>,
     {
         let mut tx = self.pool.begin().await.map_err(Internal.from_srcf())?;
 
-        let result = f(&mut tx).await?;
+        let result = f(tx.deref_mut()).await?;
 
         tx.commit().await.map_err(Internal.from_srcf())?;
-
         Ok(result)
-    }
-
-    pub async fn read<F, T, Fut>(&self, f: F) -> AppResult<T>
-    where
-        F: FnOnce(&PgPool) -> Fut,
-        Fut: Future<Output = AppResult<T>>,
-    {
-        f(&self.pool).await
-    }
-
-    pub async fn write<F, T, Fut>(&self, f: F) -> AppResult<T>
-    where
-        F: FnOnce(&PgPool) -> Fut,
-        Fut: Future<Output = AppResult<T>>,
-    {
-        f(&self.pool).await
-    }
-
-    pub async fn health_check(&self) -> AppResult<()> {
-        sqlx::query("SELECT 1")
-            .execute(&self.pool)
-            .await
-            .map_err(Internal.from_srcf())?;
-        Ok(())
     }
 
     pub async fn close(&self) -> AppResult<()> {

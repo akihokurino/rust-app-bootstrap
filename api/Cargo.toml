@@ -5,3 +5,12 @@ edition = "2024"
 
 [dependencies]
 core = { path = "../core" }
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+actix-web = "4"
+async-graphql = { version = "7", features = ["dataloader", "log", "tracing"] }
+async-graphql-actix-web = "7"
+async-graphql-value = "7"
+derive_more = "2"
+actix-cors = "0.7"
+dotenv = "0.15"

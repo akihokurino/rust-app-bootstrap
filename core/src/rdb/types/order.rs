@@ -2,7 +2,7 @@ use crate::domain::order::{Id, Order};
 use crate::errors::Kind::Internal;
 use crate::{domain, AppResult};
 use chrono::{DateTime, Utc};
-use sqlx::{FromRow, PgPool};
+use sqlx::{FromRow, Postgres};
 
 #[derive(FromRow)]
 struct OrderModel {
@@ -41,7 +41,10 @@ impl OrderRepository {
         Self {}
     }
 
-    pub async fn find(&self, pool: &PgPool) -> AppResult<Vec<Order>> {
+    pub async fn find<'a, E>(&self, pool: E) -> AppResult<Vec<Order>>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query_as!(OrderModel, "SELECT * FROM orders")
             .fetch_all(pool)
             .await
@@ -51,11 +54,14 @@ impl OrderRepository {
             .collect()
     }
 
-    pub async fn find_by_user(
+    pub async fn find_by_user<'a, E>(
         &self,
-        pool: &PgPool,
+        pool: E,
         user_id: &domain::user::Id,
-    ) -> AppResult<Vec<Order>> {
+    ) -> AppResult<Vec<Order>>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query_as!(
             OrderModel,
             "SELECT * FROM orders WHERE user_id = $1",
@@ -69,7 +75,10 @@ impl OrderRepository {
         .collect()
     }
 
-    pub async fn get(&self, pool: &PgPool, id: &Id) -> AppResult<Order> {
+    pub async fn get<'a, E>(&self, pool: E, id: &Id) -> AppResult<Order>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query_as!(
             OrderModel,
             "SELECT * FROM orders WHERE id = $1",
@@ -82,7 +91,10 @@ impl OrderRepository {
         .map_err(Internal.withf())
     }
 
-    pub async fn get_multi(&self, pool: &PgPool, ids: Vec<&Id>) -> AppResult<Vec<Order>> {
+    pub async fn get_multi<'a, E>(&self, pool: E, ids: Vec<&Id>) -> AppResult<Vec<Order>>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         let ids: Vec<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
 
         sqlx::query_as!(OrderModel, "SELECT * FROM orders WHERE id = ANY($1)", &ids)
@@ -94,7 +106,10 @@ impl OrderRepository {
             .collect()
     }
 
-    pub async fn insert(&self, pool: &PgPool, entity: Order) -> AppResult<()> {
+    pub async fn insert<'a, E>(&self, pool: E, entity: Order) -> AppResult<()>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         let model: OrderModel = entity.into();
 
         sqlx::query!(
@@ -115,7 +130,10 @@ VALUES
         Ok(())
     }
 
-    pub async fn update(&self, pool: &PgPool, entity: Order) -> AppResult<()> {
+    pub async fn update<'a, E>(&self, pool: E, entity: Order) -> AppResult<()>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         let model: OrderModel = entity.into();
 
         sqlx::query!(
@@ -138,7 +156,10 @@ WHERE id = $1",
         Ok(())
     }
 
-    pub async fn delete(&self, pool: &PgPool, id: &Id) -> AppResult<()> {
+    pub async fn delete<'a, E>(&self, pool: E, id: &Id) -> AppResult<()>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query!("DELETE FROM orders WHERE id = $1", id.as_str())
             .execute(pool)
             .await

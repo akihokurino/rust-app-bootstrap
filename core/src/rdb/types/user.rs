@@ -2,7 +2,7 @@ use crate::domain::user::{Id, User};
 use crate::errors::Kind::Internal;
 use crate::{domain, AppResult};
 use chrono::{DateTime, Utc};
-use sqlx::{FromRow, PgPool};
+use sqlx::{FromRow, Postgres};
 
 #[derive(FromRow)]
 struct UserModel {
@@ -40,7 +40,10 @@ impl UserRepository {
         Self {}
     }
 
-    pub async fn find(&self, pool: &PgPool) -> AppResult<Vec<User>> {
+    pub async fn find<'a, E>(&self, pool: E) -> AppResult<Vec<User>>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query_as!(UserModel, "SELECT * FROM users")
             .fetch_all(pool)
             .await
@@ -50,7 +53,10 @@ impl UserRepository {
             .collect()
     }
 
-    pub async fn get(&self, pool: &PgPool, id: &Id) -> AppResult<User> {
+    pub async fn get<'a, E>(&self, pool: E, id: &Id) -> AppResult<User>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query_as!(UserModel, "SELECT * FROM users WHERE id = $1", id.as_str())
             .fetch_one(pool)
             .await
@@ -59,7 +65,10 @@ impl UserRepository {
             .map_err(Internal.withf())
     }
 
-    pub async fn get_multi(&self, pool: &PgPool, ids: Vec<&Id>) -> AppResult<Vec<User>> {
+    pub async fn get_multi<'a, E>(&self, pool: E, ids: Vec<&Id>) -> AppResult<Vec<User>>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         let ids: Vec<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
 
         sqlx::query_as!(UserModel, "SELECT * FROM users WHERE id = ANY($1)", &ids)
@@ -71,14 +80,17 @@ impl UserRepository {
             .collect()
     }
 
-    pub async fn insert(&self, pool: &PgPool, entity: User) -> AppResult<()> {
+    pub async fn insert<'a, E>(&self, pool: E, entity: User) -> AppResult<()>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         let model: UserModel = entity.into();
 
         sqlx::query!(
             "
-INSERT INTO users 
-    (id, name, created_at, updated_at) 
-VALUES 
+INSERT INTO users
+    (id, name, created_at, updated_at)
+VALUES
     ($1, $2, $3, $4)",
             model.id,
             model.name,
@@ -92,16 +104,19 @@ VALUES
         Ok(())
     }
 
-    pub async fn update(&self, pool: &PgPool, entity: User) -> AppResult<()> {
+    pub async fn update<'a, E>(&self, pool: E, entity: User) -> AppResult<()>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         let model: UserModel = entity.into();
 
         sqlx::query!(
             "
-UPDATE users 
-SET 
-    name = $2, 
-    created_at = $3, 
-    updated_at = $4 
+UPDATE users
+SET
+    name = $2,
+    created_at = $3,
+    updated_at = $4
 WHERE id = $1",
             model.id,
             model.name,
@@ -115,7 +130,10 @@ WHERE id = $1",
         Ok(())
     }
 
-    pub async fn delete(&self, pool: &PgPool, id: &Id) -> AppResult<()> {
+    pub async fn delete<'a, E>(&self, pool: E, id: &Id) -> AppResult<()>
+    where
+        E: sqlx::Executor<'a, Database = Postgres>,
+    {
         sqlx::query!("DELETE FROM users WHERE id = $1", id.as_str())
             .execute(pool)
             .await
