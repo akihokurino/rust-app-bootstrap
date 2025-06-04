@@ -1,9 +1,7 @@
 use crate::errors::Kind::Internal;
 use crate::AppResult;
 use sqlx::postgres::{PgPool, PgPoolOptions};
-use sqlx::Acquire;
 use std::env;
-use std::ops::DerefMut;
 
 #[derive(Debug, Clone)]
 pub struct SessionManager {
@@ -27,22 +25,16 @@ impl SessionManager {
         Self::new(&database_url).await
     }
 
-    // プールの参照を直接返すメソッド
     pub fn pool(&self) -> &PgPool {
         &self.pool
     }
 
-    pub async fn transaction<F, T, Fut>(&self, f: F) -> AppResult<T>
-    where
-        F: for<'a> FnOnce(&'a mut sqlx::PgConnection) -> Fut,
-        Fut: Future<Output = AppResult<T>>,
-    {
-        let mut tx = self.pool.begin().await.map_err(Internal.from_srcf())?;
+    pub async fn tx_begin(&self) -> AppResult<sqlx::Transaction<sqlx::Postgres>> {
+        self.pool.begin().await.map_err(Internal.from_srcf())
+    }
 
-        let result = f(tx.deref_mut()).await?;
-
-        tx.commit().await.map_err(Internal.from_srcf())?;
-        Ok(result)
+    pub async fn tx_commit(&self, tx: sqlx::Transaction<'_, sqlx::Postgres>) -> AppResult<()> {
+        tx.commit().await.map_err(Internal.from_srcf())
     }
 
     pub async fn close(&self) -> AppResult<()> {

@@ -685,6 +685,7 @@ dependencies = [
  "base-62",
  "chrono",
  "derive_more",
+ "futures",
  "once_cell",
  "rand 0.9.1",
  "sqlx",
