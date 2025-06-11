@@ -4,6 +4,7 @@ use crate::rdb::{session_manager, types};
 use once_cell;
 use tokio::sync::{Mutex, OnceCell};
 
+mod ddb;
 pub mod domain;
 pub mod errors;
 pub mod rdb;
