@@ -4,15 +4,9 @@ use crate::rdb::{session_manager, types};
 use once_cell;
 use tokio::sync::{Mutex, OnceCell};
 
-mod ddb;
 pub mod domain;
 pub mod errors;
-mod lambda;
 pub mod rdb;
-mod s3;
-mod ses;
-mod sns;
-mod ssm;
 
 pub type AppResult<T> = Result<T, AppError>;
 
