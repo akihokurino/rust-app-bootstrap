@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RDS PostgreSQL for development environment'
+
+Parameters:
+  DBPassword:
+    Type: String
+    Default: 'postgres'
+    Description: 'Database password'
+    NoEcho: true
+
+  NetworkStackName:
+    Type: String
+    Default: 'network'
+    Description: 'Name of the network stack'
+
+  DeletionProtection:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: 'Enable deletion protection for the RDS instance'
+
+  MultipleAZ:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: 'Enable Multi-AZ for the RDS instance'
+
+Resources:
+  # DB Subnet Group
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'Subnet group for RDS PostgreSQL'
+      SubnetIds:
+        - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet1Id'
+        - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet2Id'
+      Tags:
+        - Key: Name
+          Value: rds-postgres-subnet-group
+
+  # RDS インスタンス
+  PostgreSQLDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: postgres
+      DBName: app
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: '17'
+      MasterUsername: postgres
+      MasterUserPassword: !Ref DBPassword
+      AllocatedStorage: 20
+      StorageType: gp2
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - Fn::ImportValue: !Sub '${NetworkStackName}-RDSSecurityGroupId'
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      MultiAZ: !Ref MultipleAZ
+      StorageEncrypted: true
+      DeletionProtection: !Ref DeletionProtection
+      Tags:
+        - Key: Name
+          Value: postgres
+
+Outputs:
+  DatabaseEndpoint:
+    Description: 'RDS PostgreSQL Endpoint'
+    Value: !GetAtt PostgreSQLDatabase.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-DatabaseEndpoint'
+
+  DatabasePort:
+    Description: 'RDS PostgreSQL Port'
+    Value: !GetAtt PostgreSQLDatabase.Endpoint.Port
+    Export:
+      Name: !Sub '${AWS::StackName}-DatabasePort'
+
+  ConnectionString:
+    Description: 'PostgreSQL Connection String'
+    Value: !Sub 'postgresql://postgres:${DBPassword}@${PostgreSQLDatabase.Endpoint.Address}:${PostgreSQLDatabase.Endpoint.Port}/app'
+    Export:
+      Name: !Sub '${AWS::StackName}-ConnectionString'

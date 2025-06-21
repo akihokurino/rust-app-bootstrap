@@ -14,6 +14,10 @@ pub struct QueryRoot(DefaultQuery);
 pub struct DefaultQuery;
 #[Object]
 impl DefaultQuery {
+    async fn health(&self) -> String {
+        "ok".to_string()
+    }
+
     async fn me(&self, ctx: &Context<'_>) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
         let user_loader = ctx.data::<UserDataLoader>()?;

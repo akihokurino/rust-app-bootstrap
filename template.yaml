@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: 'network'
+    Description: 'Name of the network stack'
+
+  RDSStackName:
+    Type: String
+    Default: 'rds'
+    Description: 'Name of the RDS stack'
+
+Globals:
+  Function:
+    Timeout: 300
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: bootstrap.is.real.handler
+      Runtime: provided.al2
+      MemorySize: 128
+      Tracing: Active
+
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::ImportValue: !Sub '${NetworkStackName}-LambdaSecurityGroupId'
+        SubnetIds:
+          - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet2Id'
+
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /
+            Method: ANY
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /{proxy+}
+            Method: ANY
+
+      Environment:
+        Variables:
+          WITH_LAMBDA: "true"
+          SSM_DOTENV_PARAMETER_NAME: !Sub /rust-app-bootstrap/server/dotenv
+          DATABASE_URL:
+            Fn::ImportValue: !Sub '${RDSStackName}-ConnectionString'
+
+      Policies:
+        - AmazonSSMReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AmazonS3FullAccess
+        - LambdaInvokePolicy:
+            FunctionName: "*"
+        - SESCrudPolicy:
+            IdentityName: "*"
+        # VPC内でのLambda実行に必要な権限
+        - VPCAccessPolicy: { }
+
+    Metadata:
+      BuildMethod: makefile
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: default
+      BinaryMediaTypes:
+        - "*/*"
+
+Outputs:
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/default/'

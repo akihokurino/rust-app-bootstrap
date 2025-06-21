@@ -14,3 +14,5 @@ async-graphql-value = "7"
 derive_more = "2"
 actix-cors = "0.7"
 dotenv = "0.15"
+lambda-web = { version = "0.2", features = ["actix4"] }
+futures = "0.3.31"

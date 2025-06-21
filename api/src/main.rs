@@ -1,6 +1,7 @@
 mod graphql;
 
 use actix_cors::Cors;
+use actix_web::dev::{Service, Transform};
 use actix_web::web::Data;
 use actix_web::{guard, web, App, HttpRequest, HttpResponse, HttpServer};
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
@@ -8,10 +9,16 @@ use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
+    let resolver = match core::resolver().await {
+        Ok(res) => res,
+        Err(err) => {
+            eprintln!("Failed to initialize resolver: {:?}", err);
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, err));
+        }
+    };
 
     let api_http_handler = graphql::service::HttpHandler::new().await;
-    let port = 8080; // Default port
+    let port = resolver.envs.port.clone();
 
     let app_factory = move || {
         let mut app = App::new()
@@ -25,13 +32,18 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(Data::new(api_http_handler.clone()))
             .service(
-                web::resource("/api/graphql")
+                web::resource("/default/api/graphql")
                     .guard(guard::Post())
                     .to(api_graphql_route),
-            );
+            )
+            .default_service(web::route().to(|req: HttpRequest| async move {
+                println!("Received request: {} {}", req.method(), req.path());
+                println!("Headers: {:?}", req.headers());
+                HttpResponse::Ok().body(format!("Path: {}, Method: {}", req.path(), req.method()))
+            }));
 
         app = app.service(
-            web::resource("/api/playground")
+            web::resource("/default/api/playground")
                 .guard(guard::Get())
                 .to(|| async { handle_playground("api") }),
         );
@@ -39,11 +51,18 @@ async fn main() -> std::io::Result<()> {
         app
     };
 
-    println!("listen as http server on port {}", port);
-    HttpServer::new(app_factory)
-        .bind(format!("127.0.0.1:{}", port))?
-        .run()
-        .await
+    if resolver.envs.with_lambda {
+        println!("listen as lambda function");
+        lambda_web::run_actix_on_lambda(app_factory)
+            .await
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
+    } else {
+        println!("listen as http server on port {}", port);
+        HttpServer::new(app_factory)
+            .bind(format!("127.0.0.1:{}", port))?
+            .run()
+            .await
+    }
 }
 
 async fn api_graphql_route(
@@ -55,7 +74,7 @@ async fn api_graphql_route(
 }
 
 fn handle_playground(schema_name: &'static str) -> actix_web::Result<HttpResponse> {
-    let path = format!("/{}/graphql", schema_name);
+    let path = format!("/default/{}/graphql", schema_name);
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(playground_source(GraphQLPlaygroundConfig::new(&path))))

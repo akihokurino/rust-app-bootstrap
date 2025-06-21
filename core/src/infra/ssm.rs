@@ -14,7 +14,7 @@ impl Adapter {
         }
     }
 
-    pub async unsafe fn load_dotenv(&self) -> AppResult<()> {
+    pub async fn load_dotenv(&self) -> AppResult<()> {
         let body = self
             .cli
             .get_parameter()
@@ -31,7 +31,9 @@ impl Adapter {
         for (k, v) in
             dotenv_parser::parse_dotenv(&body).map_err(|v| Internal.with(v.to_string()))?
         {
-            std::env::set_var(k, v);
+            unsafe {
+                std::env::set_var(k, v);
+            }
         }
 
         Ok(())
