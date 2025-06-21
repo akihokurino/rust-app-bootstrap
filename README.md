@@ -1,15 +1,33 @@
-# Rust App Template
+# Rust App Template For AWS
 
 ## Build App
 
 ```shell
-cargo build
+make build
 ```
 
 ## Run App
 
 ```shell
-cargo run
+make run-db
+make run-local
+```
+
+## Deploy App
+
+```shell
+make deploy
+```
+
+## Create AWS Resources
+
+```shell
+1. make ssm
+2. aws cloudformation deploy --template-file cfn/network.yaml --stack-name network
+3. aws cloudformation deploy --template-file cfn/rds.yaml --stack-name rds
+4. aws cloudformation deploy --template-file cfn/bastion.yaml --stack-name bastion
+5. aws cloudformation deploy --template-file cfn/s3.yaml --stack-name s3
+6. aws cloudformation deploy --template-file cfn/sns.yaml --stack-name sns
 ```
 
 ## SQLx

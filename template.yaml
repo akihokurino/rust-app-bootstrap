@@ -27,7 +27,6 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: provided.al2
     MemorySize: 128
     Tracing: Active
     Timeout: 900
@@ -53,6 +52,7 @@ Resources:
     Properties:
       CodeUri: .
       Handler: bootstrap.is.real.handler
+      Runtime: provided.al2
       Events:
         ProxyApiRoot:
           Type: Api
@@ -89,6 +89,7 @@ Resources:
     Properties:
       CodeUri: .
       Handler: bootstrap.is.real.handler
+      Runtime: provided.al2
       Events:
         Topic:
           Type: SNS
@@ -113,6 +114,31 @@ Resources:
     Properties:
       CodeUri: .
       Handler: bootstrap.is.real.handler
+      Runtime: provided.al2
+      Policies:
+        - VPCAccessPolicy: { }
+        - AmazonSSMReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AmazonS3FullAccess
+        - AmazonSNSFullAccess
+        - LambdaInvokePolicy:
+            FunctionName: "*"
+    Metadata:
+      BuildMethod: makefile
+
+  BatchTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: bootstrap.is.real.handler
+      Runtime: provided.al2
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Enabled: true
+            Input: '{}'
+            Schedule: 'rate(10 minutes)'
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
@@ -134,7 +160,6 @@ Outputs:
     Description: 'API Function ARN'
     Value: !GetAtt ApiFunction.Arn
 
-
   AsyncTaskFunctionArn:
     Description: 'Async Task Function ARN'
     Value: !GetAtt AsyncTaskFunction.Arn
@@ -143,4 +168,7 @@ Outputs:
     Description: 'Sync Task Function ARN'
     Value: !GetAtt SyncTaskFunction.Arn
 
-  
+  BatchTaskFunctionArn:
+    Description: 'Batch Task Function ARN'
+    Value: !GetAtt BatchTaskFunction.Arn
+

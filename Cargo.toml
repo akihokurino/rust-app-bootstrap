@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "api",
     "async_task",
+    "batch_task",
     "core",
     "sync_task",
 ]

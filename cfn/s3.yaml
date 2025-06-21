@@ -3,9 +3,9 @@ Parameters:
   EnvName:
     Description: environment group (resource group identifier)
     Type: String
+    Default: dev
     AllowedValues:
       - dev
-      - stg
       - prod
   PrepareBucketForBackup:
     Description: prepare bucket for backup

@@ -186,7 +186,7 @@ Resources:
         - Key: Name
           Value: rds-sg
 
-  # SSM VPC Endpoint（VPC内のLambdaからSSMアクセスするために利用）
+  # SSM VPC Endpoint
   SSMVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -207,8 +207,7 @@ Resources:
             Action:
               - 'ssm:GetParameter'
               - 'ssm:GetParameters'
-            Resource:
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/rust-app-bootstrap/*'
+            Resource: '*'
 
   # SNS VPC Endpoint
   SNSVPCEndpoint:
