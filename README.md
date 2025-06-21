@@ -26,7 +26,7 @@ make deploy
 2. aws cloudformation deploy --template-file cfn/network.yaml --stack-name network
 3. aws cloudformation deploy --template-file cfn/rds.yaml --stack-name rds
 4. aws cloudformation deploy --template-file cfn/bastion.yaml --stack-name bastion
-5. aws cloudformation deploy --template-file cfn/s3.yaml --stack-name s3
+5. aws cloudformation deploy --template-file cfn/s3.yaml --stack-name s3 --parameter-overrides S3BucketNamePrefix=rust-app-bootstrap
 6. aws cloudformation deploy --template-file cfn/sns.yaml --stack-name sns
 ```
 

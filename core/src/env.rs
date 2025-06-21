@@ -28,7 +28,7 @@ impl Environments {
                 .expect("failed to parse S3_BUCKET_NAME"),
             sns_async_task_topic_arn: std::env::var("SNS_ASYNC_TASK_TOPIC_ARN")
                 .expect("failed to parse SNS_ASYNC_TASK_TOPIC_ARN"),
-            sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()),
+            sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
         }
     }
 
