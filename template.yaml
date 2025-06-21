@@ -22,7 +22,7 @@ Parameters:
     Description: 'Name of the SNS stack'
   SSMParameterName:
     Type: String
-    Default: '/rust-app-bootstrap/server/dotenv'
+    Default: '/app/server/dotenv'
     Description: 'SSM Parameter Store name for dotenv file'
 
 Globals:

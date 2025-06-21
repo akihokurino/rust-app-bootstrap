@@ -38,7 +38,7 @@ deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 
 .PHONY: run-local
 run-local:
-	SSM_DOTENV_PARAMETER_NAME=/rust-app-bootstrap/server/dotenv cargo run --bin api
+	SSM_DOTENV_PARAMETER_NAME=/app/server/dotenv cargo run --bin api
 
 .PHONY: run-db
 run-db:
@@ -65,7 +65,7 @@ connect-bastion:
 .PHONY: ssm
 ssm:
 	aws ssm put-parameter \
-	--name "/rust-app-bootstrap/server/dotenv" \
+	--name "/app/server/dotenv" \
 	--value "ENV=dev" \
 	--type "SecureString"
 

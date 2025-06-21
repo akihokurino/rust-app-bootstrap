@@ -1,12 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  EnvName:
-    Description: environment group (resource group identifier)
+  S3BucketNamePrefix:
+    Description: prefix for the S3 bucket name
     Type: String
-    Default: dev
-    AllowedValues:
-      - dev
-      - prod
   PrepareBucketForBackup:
     Description: prepare bucket for backup
     Type: String
@@ -43,7 +39,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-      BucketName: !Sub ${EnvName}-rust-app-bootstrap-userdata
+      BucketName: !Sub ${S3BucketNamePrefix}-userdata
       CorsConfiguration:
         CorsRules:
           - AllowedMethods:

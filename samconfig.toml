@@ -1,6 +1,6 @@
 version = 0.1
 [default.deploy.parameters]
-stack_name = "rust-app-bootstrap"
+stack_name = "sam-app"
 s3_prefix = "sam-app"
 resolve_s3 = true
 region = "ap-northeast-1"
