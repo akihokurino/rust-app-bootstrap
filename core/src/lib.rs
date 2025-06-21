@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::infra::{s3, sns};
+use crate::infra::{lambda, s3, sns};
 use aws_config::BehaviorVersion;
 use infra::rdb::{session_manager, types};
 use infra::ssm;
@@ -19,6 +19,7 @@ pub struct Resolver {
     pub envs: env::Environments,
     pub s3: s3::Adapter,
     pub sns: sns::Adapter,
+    pub lambda: lambda::Adapter,
     pub session_manager: session_manager::SessionManager,
     pub user_repository: types::user::UserRepository,
     pub order_repository: types::order::OrderRepository,
@@ -53,6 +54,7 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
         envs.s3_bucket_name.clone(),
     );
     let sns = sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config));
+    let lambda = lambda::Adapter::new(aws_sdk_lambda::Client::new(&aws_config));
     let session_manager = session_manager::SessionManager::new(&envs.database_url).await?;
     let user_repository = types::user::UserRepository {};
     let order_repository = types::order::OrderRepository {};
@@ -62,6 +64,7 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
         envs,
         s3,
         sns,
+        lambda,
         session_manager,
         user_repository,
         order_repository,

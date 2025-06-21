@@ -1,7 +1,9 @@
 mod errors;
+pub mod types;
 
 use crate::domain::S3Key;
 use crate::errors::Kind::*;
+use crate::infra::s3::types::HeadObjectResponse;
 use crate::AppResult;
 use aws_sdk_s3::error::*;
 use aws_sdk_s3::presigning::PresigningConfig;
@@ -107,8 +109,4 @@ impl Adapter {
         }
         Ok(())
     }
-}
-
-pub struct HeadObjectResponse {
-    pub s3_path: String,
 }

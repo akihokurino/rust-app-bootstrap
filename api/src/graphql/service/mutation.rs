@@ -51,6 +51,19 @@ impl DefaultMutation {
         Ok(true.into())
     }
 
+    async fn call_sync_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
+        let core_resolver = ctx.data::<core::Resolver>()?;
+        let payload = core::infra::lambda::types::SyncTaskPayload {
+            name: "My Sync Task".to_string(),
+        };
+        let resp: core::infra::lambda::types::SyncTaskResponse = core_resolver
+            .lambda
+            .invoke(payload, core_resolver.envs.sync_task_lambda_arn.clone())
+            .await?;
+        println!("Sync task response: {:?}", resp);
+        Ok(true.into())
+    }
+
     async fn user_create(&self, ctx: &Context<'_>, input: UserCreateInput) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
         let core_resolver = ctx.data::<core::Resolver>()?;

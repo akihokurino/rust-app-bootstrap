@@ -19,7 +19,6 @@ async fn bridge(event: LambdaEvent<Value>) -> Result<(), Error> {
     Ok(())
 }
 
-#[tracing::instrument]
 async fn exec(payload: Value) -> AppResult<()> {
     let _resolver = match core::resolver().await {
         Ok(res) => res,
@@ -30,11 +29,10 @@ async fn exec(payload: Value) -> AppResult<()> {
 
     let data: EventData = serde_json::from_value(payload)
         .map_err(|e| BadRequest.with("failed to parse payload").with_src(e))?;
-    for record in data.records {
+    if let Some(record) = data.records.first() {
         let task_payload: AsyncTaskPayload = serde_json::from_str(&record.sns.message)
             .map_err(|e| BadRequest.with("failed to parse message").with_src(e))?;
 
-        // task_payload.name でアクセス可能
         println!("Task name: {}", task_payload.name);
     }
 

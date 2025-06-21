@@ -108,7 +108,39 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
+  SyncTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: bootstrap.is.real.handler
+      Policies:
+        - VPCAccessPolicy: { }
+        - AmazonSSMReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AmazonS3FullAccess
+        - AmazonSNSFullAccess
+        - LambdaInvokePolicy:
+            FunctionName: "*"
+    Metadata:
+      BuildMethod: makefile
+
+
 Outputs:
   ApiEndpoint:
     Description: 'API Gateway endpoint URL'
     Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/default/'
+
+  ApiFunctionArn:
+    Description: 'API Function ARN'
+    Value: !GetAtt ApiFunction.Arn
+
+
+  AsyncTaskFunctionArn:
+    Description: 'Async Task Function ARN'
+    Value: !GetAtt AsyncTaskFunction.Arn
+
+  SyncTaskFunctionArn:
+    Description: 'Sync Task Function ARN'
+    Value: !GetAtt SyncTaskFunction.Arn
+
+  

@@ -504,7 +504,6 @@ dependencies = [
  "anyhow",
  "core",
  "lambda_runtime 0.14.2",
- "serde",
  "serde_json",
  "tokio",
  "tracing",
@@ -3960,6 +3959,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "sync_task"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "core",
+ "lambda_runtime 0.14.2",
+ "serde_json",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

@@ -4,4 +4,5 @@ members = [
     "api",
     "async_task",
     "core",
+    "sync_task",
 ]

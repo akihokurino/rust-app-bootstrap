@@ -1,4 +1,7 @@
+pub mod types;
+
 use crate::errors::Kind::Internal;
+use crate::infra::lambda::types::ErrorResponse;
 use crate::AppResult;
 use aws_sdk_lambda::primitives::Blob;
 use aws_sdk_lambda::Client;
@@ -14,7 +17,6 @@ impl Adapter {
         Self { client }
     }
 
-    // json api call
     pub async fn invoke<Req, Res>(&self, input: Req, arn: String) -> AppResult<Res>
     where
         Req: Serialize,
@@ -40,10 +42,4 @@ impl Adapter {
 
         Ok(output)
     }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ErrorResponse {
-    pub error_message: String,
 }
