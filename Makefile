@@ -22,13 +22,6 @@ build-ApiFunction: $(BIN_OUTPUT_DIR)/api
 .PHONY: build
 build: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 
-.PHONY: ssm
-ssm:
-	aws ssm put-parameter \
-	--name "/rust-app-bootstrap/server/dotenv" \
-	--value "ENV=dev" \
-	--type "SecureString"
-
 .PHONY: deploy
 deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 	sam build
@@ -38,9 +31,9 @@ deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 run-local:
 	SSM_DOTENV_PARAMETER_NAME=/rust-app-bootstrap/server/dotenv cargo run --bin api
 
-.PHONY: prepare-sqlx
-prepare-sqlx:
-	cargo sqlx prepare --workspace
+.PHONY: run-db
+run-db:
+	docker-compose up db
 
 .PHONY: connect-rds
 connect-rds:
@@ -58,3 +51,15 @@ connect-bastion:
 	@INSTANCE_ID=$$(aws ec2 describe-instances --filters "Name=tag:Name,Values=bastion" "Name=instance-state-name,Values=running" --query 'Reservations[0].Instances[0].InstanceId' --output text) && \
 	echo "Bastionホストに接続中..." && \
 	aws ec2-instance-connect ssh --instance-id $${INSTANCE_ID} --os-user ec2-user
+
+# SecureStringをCloudFormation経由で作成できない
+.PHONY: ssm
+ssm:
+	aws ssm put-parameter \
+	--name "/rust-app-bootstrap/server/dotenv" \
+	--value "ENV=dev" \
+	--type "SecureString"
+
+.PHONY: prepare-sqlx
+prepare-sqlx:
+	cargo sqlx prepare --workspace

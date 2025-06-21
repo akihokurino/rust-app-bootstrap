@@ -1,4 +1,5 @@
 use crate::errors::AppError;
+use crate::infra::s3;
 use aws_config::BehaviorVersion;
 use infra::rdb::{session_manager, types};
 use infra::ssm;
@@ -16,6 +17,7 @@ pub type AppResult<T> = Result<T, AppError>;
 #[derive(Debug, Clone)]
 pub struct Resolver {
     pub envs: env::Environments,
+    pub s3: s3::Adapter,
     pub session_manager: session_manager::SessionManager,
     pub user_repository: types::user::UserRepository,
     pub order_repository: types::order::OrderRepository,
@@ -41,8 +43,14 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
         std::env::var("SSM_DOTENV_PARAMETER_NAME").expect("SSM_DOTENV_PARAMETER_NAME should set");
     let ssm = ssm::Adapter::new(aws_sdk_ssm::Client::new(&aws_config), ssm_parameter_name);
     ssm.load_dotenv().await?;
-
     let envs = env::Environments::new();
+
+    println!("Loaded environment variables: {:?}", envs);
+
+    let s3 = s3::Adapter::new(
+        aws_sdk_s3::Client::new(&aws_config),
+        envs.s3_bucket_name.clone(),
+    );
     let session_manager = session_manager::SessionManager::new(&envs.database_url).await?;
     let user_repository = types::user::UserRepository {};
     let order_repository = types::order::OrderRepository {};
@@ -50,6 +58,7 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
 
     let resolver = Resolver {
         envs,
+        s3,
         session_manager,
         user_repository,
         order_repository,

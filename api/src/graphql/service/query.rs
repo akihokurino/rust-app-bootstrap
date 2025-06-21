@@ -18,6 +18,16 @@ impl DefaultQuery {
         "ok".to_string()
     }
 
+    async fn pre_sign_download(&self, ctx: &Context<'_>, key: String) -> GraphResult<String> {
+        let _uid = ctx.verified_user_id()?;
+        let core_resolver = ctx.data::<core::Resolver>()?;
+        let presign_url = core_resolver
+            .s3
+            .pre_sign_for_get(&key.try_into().map_err(BadRequest.withf())?)
+            .await?;
+        Ok(presign_url.to_string())
+    }
+
     async fn me(&self, ctx: &Context<'_>) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
         let user_loader = ctx.data::<UserDataLoader>()?;

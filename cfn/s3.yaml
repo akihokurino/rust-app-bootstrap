@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  EnvName:
+    Description: environment group (resource group identifier)
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prod
+  PrepareBucketForBackup:
+    Description: prepare bucket for backup
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+Conditions:
+  EnableBucketVersioning: !Equals [ !Ref PrepareBucketForBackup, 'true' ]
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Bucket Information
+        Parameters:
+          - EnableBucketVersioning
+      - Label:
+          default: Advanced Settings
+        Parameters:
+          - PrepareBucketForBackup
+          - BucketNameSuffix
+    ParameterLabels:
+      UserdataBucketName:
+        default: Bucket Name
+      EnableBucketVersioning:
+        default: Enable Versioning
+      PrepareBucketForBackup:
+        default: Prepare Bucket for Backup
+
+Resources:
+  UserdataBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub ${EnvName}-rust-app-bootstrap-userdata
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods:
+              - HEAD
+              - GET
+              - PUT
+              - POST
+              - DELETE
+            AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            ExposedHeaders:
+              - Etag
+              - x-amz-meta-custom-header
+            MaxAge: 3000
+      PublicAccessBlockConfiguration:
+        RestrictPublicBuckets: false
+        BlockPublicPolicy: false
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+      VersioningConfiguration: !If [ EnableBucketVersioning, { Status: Enabled }, Ref: "AWS::NoValue" ]
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldObjects
+            Status: Enabled
+            Prefix: tmp/
+            ExpirationInDays: 3
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
+  UserdataBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    Properties:
+      Bucket:
+        Ref: UserdataBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource:
+              - Fn::Sub: arn:aws:s3:::${UserdataBucket}/public/*
+            Principal: '*'
+
+Outputs:
+  BucketName:
+    Description: 'S3 Bucket Name'
+    Value: !Ref UserdataBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-S3BucketName'

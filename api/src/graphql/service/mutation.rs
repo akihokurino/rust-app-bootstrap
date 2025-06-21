@@ -4,9 +4,11 @@ use crate::graphql::service::AppContext;
 use crate::graphql::service::AppResult;
 use crate::graphql::shared::types::BoolPayload;
 use crate::graphql::GraphResult;
-use async_graphql::{Context, InputObject, MergedObject, Object};
+use async_graphql::{Context, Enum, InputObject, MergedObject, Object, SimpleObject};
 use core::domain;
 use core::errors::Kind::BadRequest;
+use core::errors::Kind::Internal;
+use rand::Rng;
 
 #[derive(MergedObject, Default)]
 pub struct MutationRoot(DefaultMutation);
@@ -15,6 +17,28 @@ pub struct MutationRoot(DefaultMutation);
 pub struct DefaultMutation;
 #[Object]
 impl DefaultMutation {
+    async fn pre_sign_upload(
+        &self,
+        ctx: &Context<'_>,
+        input: PreSignUploadInput,
+    ) -> GraphResult<PreSignUploadPayload> {
+        let uid = ctx.verified_user_id()?;
+        let core_resolver = ctx.data::<core::Resolver>()?;
+
+        let file_id = base_62::encode(&rand::thread_rng().random::<[u8; 16]>());
+
+        let key = format!("{}/{}/{}", input.path.path_string(), uid.as_str(), file_id);
+        let url = core_resolver
+            .s3
+            .pre_sign_for_upload(&key.clone().try_into().map_err(Internal.withf())?)
+            .await?;
+        Ok(PreSignUploadPayload {
+            file_id,
+            key,
+            url: url.to_string(),
+        })
+    }
+
     async fn user_create(&self, ctx: &Context<'_>, input: UserCreateInput) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
         let core_resolver = ctx.data::<core::Resolver>()?;
@@ -120,4 +144,31 @@ struct OrderCreateInput {
 struct OrderDetailCreateInput {
     pub name: String,
     pub quantity: u32,
+}
+
+#[derive(InputObject)]
+struct PreSignUploadInput {
+    pub path: PreSignUploadPath,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Enum)]
+enum PreSignUploadPath {
+    Asset,
+    Temp,
+}
+
+impl PreSignUploadPath {
+    pub fn path_string(&self) -> String {
+        match self {
+            PreSignUploadPath::Asset => "asset".to_string(),
+            PreSignUploadPath::Temp => "tmp".to_string(),
+        }
+    }
+}
+
+#[derive(SimpleObject)]
+struct PreSignUploadPayload {
+    pub file_id: String,
+    pub key: String,
+    pub url: String,
 }

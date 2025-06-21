@@ -1,11 +1,7 @@
 mod errors;
-mod types;
 
 use crate::domain::S3Key;
 use crate::errors::Kind::*;
-use crate::infra::s3::types::{
-    Condition, HeadObjectResponse, Policy, Session, Statement, StringLike,
-};
 use crate::AppResult;
 use aws_sdk_s3::error::*;
 use aws_sdk_s3::presigning::PresigningConfig;
@@ -17,23 +13,14 @@ use std::time::Duration;
 #[derive(Clone, Debug)]
 pub struct Adapter {
     client: Client,
-    sts_cli: aws_sdk_sts::Client,
     default_bucket: String,
-    asset_manager_role_arn: String,
 }
 
 impl Adapter {
-    pub fn new(
-        client: Client,
-        sts_cli: aws_sdk_sts::Client,
-        bucket: String,
-        asset_manager_role_arn: String,
-    ) -> Self {
+    pub fn new(client: Client, bucket: String) -> Self {
         Self {
             client,
-            sts_cli,
             default_bucket: bucket,
-            asset_manager_role_arn,
         }
     }
 
@@ -120,49 +107,8 @@ impl Adapter {
         }
         Ok(())
     }
+}
 
-    pub async fn read_write_session(&self, path: &str, session_name: &str) -> AppResult<Session> {
-        let policy = Policy::new()
-            .add_statement(Statement::new(
-                "Allow".to_string(),
-                vec!["s3:GetObject".to_string()],
-                format!("arn:aws:s3:::{}/{}/*", self.default_bucket, path),
-                Default::default(),
-            ))
-            .add_statement(Statement::new(
-                "Allow".to_string(),
-                vec!["s3:ListBucket".to_string()],
-                format!("arn:aws:s3:::{}", self.default_bucket),
-                Some(Condition::new().string_like(StringLike::new().prefix(path.to_string()))),
-            ))
-            .add_statement(Statement::new(
-                "Allow".to_string(),
-                vec!["s3:PutObject".to_string(), "s3:PutObjectAcl".to_string()],
-                format!("arn:aws:s3:::{}/{}/*", self.default_bucket, path),
-                Default::default(),
-            ));
-
-        let res = self
-            .sts_cli
-            .assume_role()
-            .role_session_name(session_name)
-            .role_arn(self.asset_manager_role_arn.clone())
-            .policy(serde_json::to_string(&policy).unwrap())
-            .duration_seconds(3600)
-            .send()
-            .await
-            .map_err(|err| Internal.with(err.to_string()))?;
-
-        let credentials = res
-            .credentials
-            .ok_or(Internal.with("no credentials".to_string()))?;
-
-        Ok(Session {
-            bucket: self.default_bucket.clone(),
-            prefix: path.to_string(),
-            access_key_id: credentials.access_key_id,
-            secret_access_key: credentials.secret_access_key,
-            session_token: credentials.session_token,
-        })
-    }
+pub struct HeadObjectResponse {
+    pub s3_path: String,
 }
