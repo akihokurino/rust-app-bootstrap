@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "SNS Topic for notifications in the environment"
+
+Resources:
+  AsyncTaskTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: "async-task"
+
+Outputs:
+  AsyncTaskTopicArn:
+    Description: 'SNS Topic Arn'
+    Value: !Ref AsyncTaskTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-AsyncTaskTopicArn'

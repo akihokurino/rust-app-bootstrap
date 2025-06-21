@@ -16,10 +16,36 @@ Parameters:
     Type: String
     Default: 's3'
     Description: 'Name of the S3 stack'
+  SNSStackName:
+    Type: String
+    Default: 'sns'
+    Description: 'Name of the SNS stack'
+  SSMParameterName:
+    Type: String
+    Default: '/rust-app-bootstrap/server/dotenv'
+    Description: 'SSM Parameter Store name for dotenv file'
 
 Globals:
   Function:
-    Timeout: 300
+    Runtime: provided.al2
+    MemorySize: 128
+    Tracing: Active
+    Timeout: 900
+    VpcConfig:
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub '${NetworkStackName}-LambdaSecurityGroupId'
+      SubnetIds:
+        - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet2Id'
+    Environment:
+      Variables:
+        WITH_LAMBDA: "true"
+        SSM_DOTENV_PARAMETER_NAME: !Ref SSMParameterName
+        DATABASE_URL:
+          Fn::ImportValue: !Sub '${RDSStackName}-ConnectionString'
+        S3_BUCKET_NAME:
+          Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+        SNS_ASYNC_TASK_TOPIC_ARN:
+          Fn::ImportValue: !Sub '${SNSStackName}-AsyncTaskTopicArn'
 
 Resources:
   ApiFunction:
@@ -27,16 +53,6 @@ Resources:
     Properties:
       CodeUri: .
       Handler: bootstrap.is.real.handler
-      Runtime: provided.al2
-      MemorySize: 128
-      Tracing: Active
-
-      VpcConfig:
-        SecurityGroupIds:
-          - Fn::ImportValue: !Sub '${NetworkStackName}-LambdaSecurityGroupId'
-        SubnetIds:
-          - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet2Id'
-
       Events:
         ProxyApiRoot:
           Type: Api
@@ -50,27 +66,14 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /{proxy+}
             Method: ANY
-
-      Environment:
-        Variables:
-          WITH_LAMBDA: "true"
-          SSM_DOTENV_PARAMETER_NAME: !Sub /rust-app-bootstrap/server/dotenv
-          DATABASE_URL:
-            Fn::ImportValue: !Sub '${RDSStackName}-ConnectionString'
-          S3_BUCKET_NAME:
-            Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
-
       Policies:
+        - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
         - AmazonDynamoDBFullAccess
         - AmazonS3FullAccess
+        - AmazonSNSFullAccess
         - LambdaInvokePolicy:
             FunctionName: "*"
-        - SESCrudPolicy:
-            IdentityName: "*"
-        # VPC内でのLambda実行に必要な権限
-        - VPCAccessPolicy: { }
-
     Metadata:
       BuildMethod: makefile
 
@@ -80,6 +83,30 @@ Resources:
       StageName: default
       BinaryMediaTypes:
         - "*/*"
+
+  AsyncTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: bootstrap.is.real.handler
+      Events:
+        Topic:
+          Type: SNS
+          Properties:
+            Topic:
+              Fn::ImportValue: !Sub '${SNSStackName}-AsyncTaskTopicArn'
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+      Policies:
+        - VPCAccessPolicy: { }
+        - AmazonSSMReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AmazonS3FullAccess
+        - AmazonSNSFullAccess
+        - LambdaInvokePolicy:
+            FunctionName: "*"
+    Metadata:
+      BuildMethod: makefile
 
 Outputs:
   ApiEndpoint:

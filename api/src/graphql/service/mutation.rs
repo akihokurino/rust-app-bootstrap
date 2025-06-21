@@ -25,7 +25,7 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let core_resolver = ctx.data::<core::Resolver>()?;
 
-        let file_id = base_62::encode(&rand::thread_rng().random::<[u8; 16]>());
+        let file_id = base_62::encode(&rand::rng().random::<[u8; 16]>());
 
         let key = format!("{}/{}/{}", input.path.path_string(), uid.as_str(), file_id);
         let url = core_resolver
@@ -37,6 +37,18 @@ impl DefaultMutation {
             key,
             url: url.to_string(),
         })
+    }
+
+    async fn call_async_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
+        let core_resolver = ctx.data::<core::Resolver>()?;
+        let payload = core::infra::sns::types::AsyncTaskPayload {
+            name: "My Async Task".to_string(),
+        };
+        core_resolver
+            .sns
+            .publish(payload, core_resolver.envs.sns_async_task_topic_arn.clone())
+            .await?;
+        Ok(true.into())
     }
 
     async fn user_create(&self, ctx: &Context<'_>, input: UserCreateInput) -> GraphResult<Me> {

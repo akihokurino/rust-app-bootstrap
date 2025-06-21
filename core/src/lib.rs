@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::infra::s3;
+use crate::infra::{s3, sns};
 use aws_config::BehaviorVersion;
 use infra::rdb::{session_manager, types};
 use infra::ssm;
@@ -10,7 +10,7 @@ use tokio::sync::{Mutex, OnceCell};
 pub mod domain;
 mod env;
 pub mod errors;
-mod infra;
+pub mod infra;
 
 pub type AppResult<T> = Result<T, AppError>;
 
@@ -18,6 +18,7 @@ pub type AppResult<T> = Result<T, AppError>;
 pub struct Resolver {
     pub envs: env::Environments,
     pub s3: s3::Adapter,
+    pub sns: sns::Adapter,
     pub session_manager: session_manager::SessionManager,
     pub user_repository: types::user::UserRepository,
     pub order_repository: types::order::OrderRepository,
@@ -51,6 +52,7 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
     );
+    let sns = sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config));
     let session_manager = session_manager::SessionManager::new(&envs.database_url).await?;
     let user_repository = types::user::UserRepository {};
     let order_repository = types::order::OrderRepository {};
@@ -59,6 +61,7 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
     let resolver = Resolver {
         envs,
         s3,
+        sns,
         session_manager,
         user_repository,
         order_repository,

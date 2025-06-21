@@ -11,6 +11,7 @@ pub struct Environments {
     pub with_lambda: bool,
     pub database_url: String,
     pub s3_bucket_name: String,
+    pub sns_async_task_topic_arn: String,
 }
 impl Environments {
     pub fn new() -> Self {
@@ -24,6 +25,8 @@ impl Environments {
                 .unwrap_or("postgresql://postgres:postgres@localhost:5432/app".to_string()),
             s3_bucket_name: std::env::var("S3_BUCKET_NAME")
                 .expect("failed to parse S3_BUCKET_NAME"),
+            sns_async_task_topic_arn: std::env::var("SNS_ASYNC_TASK_TOPIC_ARN")
+                .expect("failed to parse SNS_ASYNC_TASK_TOPIC_ARN"),
         }
     }
 

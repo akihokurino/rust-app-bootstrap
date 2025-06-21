@@ -1,7 +1,6 @@
 mod graphql;
 
 use actix_cors::Cors;
-use actix_web::dev::{Service, Transform};
 use actix_web::web::Data;
 use actix_web::{guard, web, App, HttpRequest, HttpResponse, HttpServer};
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
@@ -12,8 +11,7 @@ async fn main() -> std::io::Result<()> {
     let resolver = match core::resolver().await {
         Ok(res) => res,
         Err(err) => {
-            eprintln!("Failed to initialize resolver: {:?}", err);
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, err));
+            panic!("Failed to initialize resolver: {:?}", err);
         }
     };
 

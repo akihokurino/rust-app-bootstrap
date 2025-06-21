@@ -1,3 +1,5 @@
+pub mod types;
+
 use crate::errors::Kind::*;
 use crate::AppResult;
 use aws_sdk_sns::Client;
