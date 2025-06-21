@@ -27,8 +27,7 @@ ssm:
 	aws ssm put-parameter \
 	--name "/rust-app-bootstrap/server/dotenv" \
 	--value "ENV=dev" \
-	--type "SecureString" \
- 	--overwrite
+	--type "SecureString"
 
 .PHONY: deploy
 deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
@@ -42,3 +41,20 @@ run-local:
 .PHONY: prepare-sqlx
 prepare-sqlx:
 	cargo sqlx prepare --workspace
+
+.PHONY: connect-rds
+connect-rds:
+	@INSTANCE_ID=$$(aws ec2 describe-instances --filters "Name=tag:Name,Values=bastion" "Name=instance-state-name,Values=running" --query 'Reservations[0].Instances[0].InstanceId' --output text) && \
+	BASTION_IP=$$(aws ec2 describe-instances --instance-ids $${INSTANCE_ID} --query 'Reservations[0].Instances[0].PublicIpAddress' --output text) && \
+	RDS_ENDPOINT=$$(aws cloudformation describe-stacks --stack-name rds --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' --output text) && \
+	echo "公開鍵を送信中（60秒間有効）..." && \
+	aws ec2-instance-connect send-ssh-public-key --instance-id $${INSTANCE_ID} --instance-os-user ec2-user --ssh-public-key "$$(cat ~/.ssh/id_rsa.pub)" && \
+	echo "pgAdmin4で localhost:5432 に接続してください" && \
+	echo "ユーザー: postgres, パスワード: postgres, DB: app" && \
+	ssh -o StrictHostKeyChecking=no -L 5432:$${RDS_ENDPOINT}:5432 ec2-user@$${BASTION_IP}
+
+.PHONY: connect-bastion
+connect-bastion:
+	@INSTANCE_ID=$$(aws ec2 describe-instances --filters "Name=tag:Name,Values=bastion" "Name=instance-state-name,Values=running" --query 'Reservations[0].Instances[0].InstanceId' --output text) && \
+	echo "Bastionホストに接続中..." && \
+	aws ec2-instance-connect ssh --instance-id $${INSTANCE_ID} --os-user ec2-user
