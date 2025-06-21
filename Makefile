@@ -38,3 +38,7 @@ deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 .PHONY: run-local
 run-local:
 	SSM_DOTENV_PARAMETER_NAME=/rust-app-bootstrap/server/dotenv cargo run --bin api
+
+.PHONY: prepare-sqlx
+prepare-sqlx:
+	cargo sqlx prepare --workspace

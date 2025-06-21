@@ -26,3 +26,13 @@ cargo install sqlx-cli --features postgres
 sqlx migrate add create_users_table -r
 sqlx migrate run
 ```
+
+### IntellijIdea で `set DATABASE_URL to use query macros online` のエラーが出る場合
+
+Settings → Languages & Frameworks → Rust → Environment Variables
+
+```dotenv
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app
+```
+
+を追加。
