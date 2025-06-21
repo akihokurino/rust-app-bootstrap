@@ -32,25 +32,31 @@ make deploy
 
 ## SQLx
 
-### install tools
+### Install tools
 
 ```shell
 cargo install sqlx-cli --features postgres
 ```
 
-### migration
+### Migration
 
 ```shell
 sqlx migrate add create_users_table -r
 sqlx migrate run
 ```
 
-### IntellijIdea で `set DATABASE_URL to use query macros online` のエラーが出る場合
+### Offline mode
 
-Settings → Languages & Frameworks → Rust → Environment Variables
+```shell
+cargo sqlx prepare --workspace
+```
+
+### Memo
+
+> IntellijIdea で `set DATABASE_URL to use query macros online` のエラーが出る場合
+
+Settings → Languages & Frameworks → Rust → Environment Variables で下記を追加
 
 ```dotenv
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app
 ```
-
-を追加。

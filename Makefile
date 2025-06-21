@@ -68,7 +68,3 @@ ssm:
 	--name "/app/server/dotenv" \
 	--value "ENV=dev" \
 	--type "SecureString"
-
-.PHONY: prepare-sqlx
-prepare-sqlx:
-	cargo sqlx prepare --workspace
