@@ -60,3 +60,8 @@ Settings → Languages & Frameworks → Rust → Environment Variables で下記
 ```dotenv
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app
 ```
+
+## AWS
+<img width="1220" alt="スクリーンショット 2025-06-27 10 44 46" src="https://github.com/user-attachments/assets/ea65fafc-067f-4923-ba4e-27dd80bcbd15" />
+
+
