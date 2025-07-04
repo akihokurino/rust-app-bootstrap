@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+  install:
+    commands: []
+  pre_build:
+    commands:
+      - if [ -n "$DOCKER_CONFIG_BODY" ]; then echo "DOCKER_CONFIG_BODY detected. expand to ~/.docker/config.json" && mkdir -p ~/.docker && echo "$DOCKER_CONFIG_BODY" > ~/.docker/config.json ; fi
+      - mkdir -p .lcache/target .lcache/.docker/cache/cargo/registry
+      - mkdir -p .docker/cache/cargo
+      - cp -rH .lcache/target ./
+      - cp -rH .lcache/.docker/cache/cargo/registry .docker/cache/cargo/
+  build:
+    commands:
+      - SQLX_OFFLINE=true make USE_DOCKER=1 USE_DOCKER_CACHE=1 STRIP=1 SAM_CONFIG_FILE=samconfig.toml deploy
+      - rm -Rf .lcache/target/* .lcache/.docker/cache/cargo/registry
+      - cp -r target/* .lcache/target/
+      - cp -r .docker/cache/cargo/registry .lcache/.docker/cache/cargo/
+  post_build:
+    commands: []
+cache:
+  paths:
+    - .lcache/.docker/cache/**/*
+    - .lcache/target/**/*

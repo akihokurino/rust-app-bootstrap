@@ -5,8 +5,13 @@ ifeq ($(USE_DOCKER), 1)
 	ifeq ($(USE_DOCKER_CACHE), 1)
 		DOCKER_CACHE_PARAMS := -v "$(shell pwd)/.docker/cache/cargo/registry:/root/.cargo/registry"
 	endif
-	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.87.0-stable
+	SQLX_OFFLINE_PARAM :=
+    ifdef SQLX_OFFLINE
+    	SQLX_OFFLINE_PARAM := -e SQLX_OFFLINE=$(SQLX_OFFLINE)
+    endif
+	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(SQLX_OFFLINE_PARAM) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.87.0-stable
 endif
+
 
 BIN_OUTPUT_DIR := target/x86_64-unknown-linux-musl/release
 SRC_FILES := $(shell find . -type f | grep -v '^\./target' | grep -v '/\.')
@@ -68,3 +73,14 @@ ssm:
 	--name "/app/server/dotenv" \
 	--value "ENV=dev" \
 	--type "SecureString"
+
+.PHONY: ssm-docker-config
+ssm-docker-config:
+	aws ssm put-parameter \
+	--name "/app/docker/config" \
+	--value file://.docker/config.json \
+	--type "SecureString"
+
+.PHONY: sqlx-prepare
+sqlx-prepare:
+	cargo sqlx prepare --workspace

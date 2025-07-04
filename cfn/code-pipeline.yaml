@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: build and deploy
+Parameters:
+  EnvName:
+    Description: environment group (resource group identifier)
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+  BuildTargetBranch:
+    Description: build target (trigger) branch name
+    Type: String
+  CodeStarConnectionArn:
+    Description: codestar connection arn
+    Type: String
+  GitHubRepoOwner:
+    Description: github owner name
+    Type: String
+    Default: NEOf-Inc
+  GitHubRepoName:
+    Description: github repository name
+    Type: String
+    Default: matching-app-server
+  DockerConfigParameterName:
+    Description: docker config parameter name
+    Type: String
+    Default: ""
+  S3StackName:
+    Type: String
+    Default: "s3"
+    Description: "Name of the s3 stack"
+
+Conditions:
+  HasDockerConfigParameterName:
+    !Not [!Equals [!Ref DockerConfigParameterName, ""]]
+
+Resources:
+  BuildExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSCertificateManagerFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+      Policies:
+        - PolicyName: build-execution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/server
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/server:*
+                Effect: Allow
+              - Action:
+                  - "cloudformation:*"
+                  - "iam:*"
+                  - "lambda:*"
+                  - "route53:*"
+                Resource: "*"
+                Effect: Allow
+
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Cache:
+        Modes:
+          - LOCAL_SOURCE_CACHE
+          - LOCAL_DOCKER_LAYER_CACHE
+        Type: LOCAL
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        EnvironmentVariables:
+          - Name: ENV
+            Value: !Ref EnvName
+          - !If
+            - HasDockerConfigParameterName
+            - Name: DOCKER_CONFIG_BODY
+              Type: PARAMETER_STORE
+              Value: !Ref DockerConfigParameterName
+            - !Ref AWS::NoValue
+        PrivilegedMode: true
+      Name: server
+      ServiceRole: !GetAtt BuildExecutionRole.Arn
+      Source:
+        Type: CODEPIPELINE
+
+  PipelineExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+                - cloudformation.amazonaws.com
+      Policies:
+        - PolicyName: pipeline-execution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - "iam:PassRole"
+                Resource: "*"
+                Effect: Allow
+                Condition:
+                  StringEqualsIfExists:
+                    iam:PassedToService:
+                      - "cloudformation.amazonaws.com"
+                      - "ec2.amazonaws.com"
+                      - "ecs-tasks.amazonaws.com"
+              - Action:
+                  - "ec2:*"
+                  - "elasticloadbalancing:*"
+                  - "autoscaling:*"
+                  - "cloudwatch:*"
+                  - "s3:*"
+                  - "sns:*"
+                  - "cloudformation:*"
+                  - "rds:*"
+                  - "sqs:*"
+                  - "ecs:*"
+                  - "lambda:*"
+                  - "codebuild:*"
+                  - "codedeploy:*"
+                  - "ecr:*"
+                  - "iam:*"
+                  - "events:*"
+                  - "route53:*"
+                  - "codestar-connections:*"
+                Resource: "*"
+                Effect: Allow
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !ImportValue
+          Fn::Sub: "${S3StackName}-S3PipelineArtifactBucketName"
+      Name: server-pipeline
+      RestartExecutionOnUpdate: false
+      RoleArn: !GetAtt PipelineExecutionRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              RunOrder: 1
+              Configuration:
+                FullRepositoryId: !Sub ${GitHubRepoOwner}/${GitHubRepoName}
+                BranchName: !Ref BuildTargetBranch
+                ConnectionArn: !Ref CodeStarConnectionArn
+              OutputArtifacts:
+                - Name: SourceArtifact
+        - Name: Build
+          Actions:
+            - Name: Build-Deploy
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              RunOrder: 1
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceArtifact
