@@ -8,7 +8,7 @@ use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let resolver = match core::resolver().await {
+    let resolver = match app::resolver().await {
         Ok(res) => res,
         Err(err) => {
             panic!("Failed to initialize resolver: {:?}", err);

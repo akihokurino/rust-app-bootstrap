@@ -84,3 +84,7 @@ ssm-docker-config:
 .PHONY: sqlx-prepare
 sqlx-prepare:
 	cargo sqlx prepare --workspace
+
+.PHONY: migrate-db
+migrate-db:
+	sqlx migrate run

@@ -1,12 +1,12 @@
 use async_graphql::dataloader::*;
 use async_graphql::*;
-use core::domain;
-use core::domain::IntoIdMap;
-use core::errors::AppError;
+use app::domain;
+use app::domain::IntoIdMap;
+use app::errors::AppError;
 use std::collections::HashMap;
 
 pub struct OrderLoader {
-    core_resolver: core::Resolver,
+    resolver: app::Resolver,
 }
 impl Loader<domain::order::Id> for OrderLoader {
     type Value = domain::order::Order;
@@ -16,10 +16,10 @@ impl Loader<domain::order::Id> for OrderLoader {
         &self,
         keys: &[domain::order::Id],
     ) -> Result<HashMap<domain::order::Id, Self::Value>, Self::Error> {
-        let pool = self.core_resolver.session_manager.pool();
+        let pool = self.resolver.session_manager.pool();
         let ids = keys.into_iter().collect::<Vec<_>>();
         let items = self
-            .core_resolver
+            .resolver
             .order_repository
             .get_multi(pool, ids)
             .await?;
@@ -29,6 +29,6 @@ impl Loader<domain::order::Id> for OrderLoader {
 
 pub type OrderDataLoader = DataLoader<OrderLoader>;
 
-pub fn new_loader(core_resolver: core::Resolver) -> OrderDataLoader {
-    DataLoader::new(OrderLoader { core_resolver }, tokio::spawn)
+pub fn new_loader(resolver: app::Resolver) -> OrderDataLoader {
+    DataLoader::new(OrderLoader { resolver }, tokio::spawn)
 }

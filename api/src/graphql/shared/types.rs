@@ -1,7 +1,7 @@
 use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, SimpleObject};
 use async_graphql_value::ConstValue;
-use core::domain;
-use core::domain::time::ParseFromRfc3339;
+use app::domain;
+use app::domain::time::ParseFromRfc3339;
 use derive_more::{From, Into};
 
 #[derive(SimpleObject)]

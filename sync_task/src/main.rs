@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use core::infra::lambda::types::SyncTaskPayload;
-use core::infra::lambda::types::SyncTaskResponse;
-use core::AppResult;
+use app::infra::lambda::types::SyncTaskPayload;
+use app::infra::lambda::types::SyncTaskResponse;
+use app::AppResult;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 
 #[tokio::main]
@@ -22,7 +22,7 @@ async fn bridge(event: LambdaEvent<SyncTaskPayload>) -> Result<SyncTaskResponse,
 }
 
 async fn exec(payload: SyncTaskPayload) -> AppResult<SyncTaskResponse> {
-    let _resolver = match core::resolver().await {
+    let _resolver = match app::resolver().await {
         Ok(res) => res,
         Err(err) => {
             panic!("Failed to initialize resolver: {:?}", err);

@@ -1,6 +1,6 @@
 use async_graphql::{ErrorExtensions, FieldError};
-use core::errors::AppError;
-use core::errors::Kind::*;
+use app::errors::AppError;
+use app::errors::Kind::*;
 use derive_more::From;
 use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;

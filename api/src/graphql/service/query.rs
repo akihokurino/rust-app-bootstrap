@@ -5,7 +5,7 @@ use crate::graphql::service::types::user::{Me, User};
 use crate::graphql::service::AppContext;
 use crate::graphql::GraphResult;
 use async_graphql::{Context, MergedObject, Object, ID};
-use core::errors::Kind::BadRequest;
+use app::errors::Kind::BadRequest;
 
 #[derive(MergedObject, Default)]
 pub struct QueryRoot(DefaultQuery);
@@ -20,8 +20,8 @@ impl DefaultQuery {
 
     async fn pre_sign_download(&self, ctx: &Context<'_>, key: String) -> GraphResult<String> {
         let _uid = ctx.verified_user_id()?;
-        let core_resolver = ctx.data::<core::Resolver>()?;
-        let presign_url = core_resolver
+        let resolver = ctx.data::<app::Resolver>()?;
+        let presign_url = resolver
             .s3
             .pre_sign_for_get(&key.try_into().map_err(BadRequest.withf())?)
             .await?;
@@ -37,9 +37,9 @@ impl DefaultQuery {
     }
 
     async fn users(&self, ctx: &Context<'_>) -> GraphResult<Vec<User>> {
-        let core_resolver = ctx.data::<core::Resolver>()?;
-        let pool = core_resolver.session_manager.pool();
-        let users = core_resolver.user_repository.find(pool).await?;
+        let resolver = ctx.data::<app::Resolver>()?;
+        let pool = resolver.session_manager.pool();
+        let users = resolver.user_repository.find(pool).await?;
         Ok(users.into_iter().map(|v| v.into()).collect())
     }
 

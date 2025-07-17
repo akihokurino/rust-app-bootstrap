@@ -10,11 +10,11 @@ use actix_web::HttpRequest;
 use async_graphql::{Context, EmptySubscription};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;
-use core::domain;
-use core::errors::AppError;
-use core::errors::Kind::BadRequest;
-use core::errors::Kind::Unauthorized;
-use core::AppResult;
+use app::domain;
+use app::errors::AppError;
+use app::errors::Kind::BadRequest;
+use app::errors::Kind::Unauthorized;
+use app::AppResult;
 
 type AuthorizedUserId = domain::user::Id;
 
@@ -45,7 +45,7 @@ pub struct HttpHandler {
 
 impl HttpHandler {
     pub async fn new() -> Self {
-        let core_resolver = core::resolver()
+        let resolver = app::resolver()
             .await
             .expect("Failed to initialize rdb resolver")
             .clone();
@@ -54,9 +54,9 @@ impl HttpHandler {
             MutationRoot::default(),
             EmptySubscription,
         )
-        .data(core_resolver.clone())
-        .data(data_loader::user::new_loader(core_resolver.clone()))
-        .data(data_loader::order::new_loader(core_resolver.clone()))
+        .data(resolver.clone())
+        .data(data_loader::user::new_loader(resolver.clone()))
+        .data(data_loader::order::new_loader(resolver.clone()))
         .finish();
 
         HttpHandler { schema }

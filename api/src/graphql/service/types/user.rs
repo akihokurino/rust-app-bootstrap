@@ -2,7 +2,7 @@ use crate::graphql::service::types::order::Order;
 use crate::graphql::shared::types::DateTime;
 use crate::graphql::GraphResult;
 use async_graphql::{Context, Object, ID};
-use core::domain;
+use app::domain;
 use derive_more::From;
 
 #[derive(Debug, Clone, From)]
@@ -18,9 +18,9 @@ impl Me {
     }
 
     async fn orders(&self, ctx: &Context<'_>) -> GraphResult<Vec<Order>> {
-        let core_resolver = ctx.data::<core::Resolver>()?;
-        let pool = core_resolver.session_manager.pool();
-        let orders = core_resolver
+        let resolver = ctx.data::<app::Resolver>()?;
+        let pool = resolver.session_manager.pool();
+        let orders = resolver
             .order_repository
             .find_by_user(pool, &self.0.id)
             .await?;

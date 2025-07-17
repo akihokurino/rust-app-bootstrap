@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use core::errors::Kind::BadRequest;
-use core::infra::sns::types::{AsyncTaskPayload, EventData};
-use core::AppResult;
+use app::errors::Kind::BadRequest;
+use app::infra::sns::types::{AsyncTaskPayload, EventData};
+use app::AppResult;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use serde_json::Value;
 
@@ -20,7 +20,7 @@ async fn bridge(event: LambdaEvent<Value>) -> Result<(), Error> {
 }
 
 async fn exec(payload: Value) -> AppResult<()> {
-    let _resolver = match core::resolver().await {
+    let _resolver = match app::resolver().await {
         Ok(res) => res,
         Err(err) => {
             panic!("Failed to initialize resolver: {:?}", err);
