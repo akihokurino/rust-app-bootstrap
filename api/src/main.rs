@@ -1,9 +1,11 @@
 mod graphql;
+mod playground;
 
+use crate::playground::my_playground_source;
 use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{guard, web, App, HttpRequest, HttpResponse, HttpServer};
-use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
+use async_graphql::http::GraphQLPlaygroundConfig;
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 
 #[actix_web::main]
@@ -75,5 +77,5 @@ fn handle_playground(schema_name: &'static str) -> actix_web::Result<HttpRespons
     let path = format!("/default/{}/graphql", schema_name);
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(playground_source(GraphQLPlaygroundConfig::new(&path))))
+        .body(my_playground_source(GraphQLPlaygroundConfig::new(&path))))
 }

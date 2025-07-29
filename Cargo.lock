@@ -345,6 +345,7 @@ dependencies = [
  "derive_more",
  "lambda-web",
  "rand 0.9.1",
+ "serde_json",
  "tokio",
 ]
 
