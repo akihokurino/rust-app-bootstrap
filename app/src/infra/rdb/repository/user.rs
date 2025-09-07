@@ -1,8 +1,8 @@
-use crate::domain::user::Id;
+use crate::domain::user::{Id, User};
 use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::map_insert_error;
 use crate::infra::rdb::types::user;
-use crate::{domain, AppResult};
+use crate::AppResult;
 use sea_orm::{entity::prelude::*, ConnectionTrait, EntityTrait, QueryFilter, QueryOrder};
 
 #[derive(Debug, Clone)]
@@ -12,7 +12,7 @@ impl Repository {
         Self {}
     }
 
-    pub async fn find<C>(&self, db: &C) -> AppResult<Vec<domain::user::User>>
+    pub async fn find<C>(&self, db: &C) -> AppResult<Vec<User>>
     where
         C: ConnectionTrait,
     {
@@ -26,7 +26,7 @@ impl Repository {
             .collect()
     }
 
-    pub async fn get<C>(&self, db: &C, id: &Id) -> AppResult<domain::user::User>
+    pub async fn get<C>(&self, db: &C, id: &Id) -> AppResult<User>
     where
         C: ConnectionTrait,
     {
@@ -39,7 +39,7 @@ impl Repository {
             .map_err(Internal.withf())
     }
 
-    pub async fn get_multi<C>(&self, db: &C, ids: Vec<&Id>) -> AppResult<Vec<domain::user::User>>
+    pub async fn get_multi<C>(&self, db: &C, ids: Vec<&Id>) -> AppResult<Vec<User>>
     where
         C: ConnectionTrait,
     {
@@ -54,7 +54,7 @@ impl Repository {
             .collect()
     }
 
-    pub async fn insert<C>(&self, db: &C, user: domain::user::User) -> AppResult<()>
+    pub async fn insert<C>(&self, db: &C, user: User) -> AppResult<()>
     where
         C: ConnectionTrait,
     {
@@ -68,7 +68,7 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn update<C>(&self, db: &C, user: domain::user::User) -> AppResult<()>
+    pub async fn update<C>(&self, db: &C, user: User) -> AppResult<()>
     where
         C: ConnectionTrait,
     {

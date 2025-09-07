@@ -1,8 +1,9 @@
-use crate::domain::order::Id;
+use crate::domain::order::{Id, Order};
+use crate::domain::user;
 use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::map_insert_error;
 use crate::infra::rdb::types::order;
-use crate::{domain, AppResult};
+use crate::AppResult;
 use sea_orm::{entity::prelude::*, ConnectionTrait, EntityTrait, QueryFilter, QueryOrder};
 
 #[derive(Debug, Clone)]
@@ -13,7 +14,7 @@ impl Repository {
         Self {}
     }
 
-    pub async fn find<C>(&self, db: &C) -> AppResult<Vec<domain::order::Order>>
+    pub async fn find<C>(&self, db: &C) -> AppResult<Vec<Order>>
     where
         C: ConnectionTrait,
     {
@@ -27,11 +28,7 @@ impl Repository {
             .collect()
     }
 
-    pub async fn find_by_user<C>(
-        &self,
-        db: &C,
-        user_id: &domain::user::Id,
-    ) -> AppResult<Vec<domain::order::Order>>
+    pub async fn find_by_user<C>(&self, db: &C, user_id: &user::Id) -> AppResult<Vec<Order>>
     where
         C: ConnectionTrait,
     {
@@ -46,7 +43,7 @@ impl Repository {
             .collect()
     }
 
-    pub async fn get<C>(&self, db: &C, id: &Id) -> AppResult<domain::order::Order>
+    pub async fn get<C>(&self, db: &C, id: &Id) -> AppResult<Order>
     where
         C: ConnectionTrait,
     {
@@ -59,7 +56,7 @@ impl Repository {
             .map_err(Internal.withf())
     }
 
-    pub async fn get_multi<C>(&self, db: &C, ids: Vec<&Id>) -> AppResult<Vec<domain::order::Order>>
+    pub async fn get_multi<C>(&self, db: &C, ids: Vec<&Id>) -> AppResult<Vec<Order>>
     where
         C: ConnectionTrait,
     {
@@ -74,7 +71,7 @@ impl Repository {
             .collect()
     }
 
-    pub async fn insert<C>(&self, db: &C, order: domain::order::Order) -> AppResult<()>
+    pub async fn insert<C>(&self, db: &C, order: Order) -> AppResult<()>
     where
         C: ConnectionTrait,
     {
@@ -88,7 +85,7 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn update<C>(&self, db: &C, order: domain::order::Order) -> AppResult<()>
+    pub async fn update<C>(&self, db: &C, order: Order) -> AppResult<()>
     where
         C: ConnectionTrait,
     {
