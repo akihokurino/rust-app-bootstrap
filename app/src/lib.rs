@@ -54,6 +54,7 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
     );
     let sns = sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config));
     let lambda = lambda::Adapter::new(aws_sdk_lambda::Client::new(&aws_config));
+
     let session_manager = session_manager::SessionManager::new(&envs.database_url).await?;
     let user_repository = repository::user::Repository {};
     let order_repository = repository::order::Repository {};

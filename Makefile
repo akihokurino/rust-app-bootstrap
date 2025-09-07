@@ -5,11 +5,7 @@ ifeq ($(USE_DOCKER), 1)
 	ifeq ($(USE_DOCKER_CACHE), 1)
 		DOCKER_CACHE_PARAMS := -v "$(shell pwd)/.docker/cache/cargo/registry:/root/.cargo/registry"
 	endif
-	SQLX_OFFLINE_PARAM :=
-    ifdef SQLX_OFFLINE
-    	SQLX_OFFLINE_PARAM := -e SQLX_OFFLINE=$(SQLX_OFFLINE)
-    endif
-	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(SQLX_OFFLINE_PARAM) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.87.0-stable
+	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.87.0-stable
 endif
 
 
@@ -51,7 +47,7 @@ run-db:
 
 .PHONY: run-migration
 run-migration:
-	sqlx migrate run
+	cd migration && cargo run -- refresh
 
 .PHONY: reset-db
 reset-db:

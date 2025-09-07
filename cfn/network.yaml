@@ -167,6 +167,19 @@ Resources:
         - Key: Name
           Value: bastion-sg
 
+  # CodeBuild用セキュリティグループ
+  CodeBuildSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Security group for CodeBuild'
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: codebuild-sg
+
   # RDS用セキュリティグループ
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -182,6 +195,10 @@ Resources:
           FromPort: 5432
           ToPort: 5432
           SourceSecurityGroupId: !Ref BastionSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref CodeBuildSecurityGroup
       Tags:
         - Key: Name
           Value: rds-sg
@@ -269,3 +286,9 @@ Outputs:
     Value: !Ref BastionSecurityGroup
     Export:
       Name: !Sub '${AWS::StackName}-BastionSecurityGroupId'
+
+  CodeBuildSecurityGroupId:
+    Description: 'CodeBuild Security Group ID'
+    Value: !Ref CodeBuildSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-CodeBuildSecurityGroupId'

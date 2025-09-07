@@ -6,13 +6,13 @@ Parameters:
   PrepareBucketForBackup:
     Description: prepare bucket for backup
     Type: String
-    Default: "false"
+    Default: 'false'
     AllowedValues:
-      - "true"
-      - "false"
+      - 'true'
+      - 'false'
 
 Conditions:
-  EnableBucketVersioning: !Equals [!Ref PrepareBucketForBackup, "true"]
+  EnableBucketVersioning: !Equals [ !Ref PrepareBucketForBackup, 'true' ]
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -49,9 +49,9 @@ Resources:
               - POST
               - DELETE
             AllowedOrigins:
-              - "*"
+              - '*'
             AllowedHeaders:
-              - "*"
+              - '*'
             ExposedHeaders:
               - Etag
               - x-amz-meta-custom-header
@@ -61,8 +61,7 @@ Resources:
         BlockPublicPolicy: false
         BlockPublicAcls: false
         IgnorePublicAcls: false
-      VersioningConfiguration:
-        !If [EnableBucketVersioning, { Status: Enabled }, Ref: "AWS::NoValue"]
+      VersioningConfiguration: !If [ EnableBucketVersioning, { Status: Enabled }, Ref: "AWS::NoValue" ]
       LifecycleConfiguration:
         Rules:
           - Id: DeleteOldObjects
@@ -86,7 +85,8 @@ Resources:
             Effect: Allow
             Resource:
               - Fn::Sub: arn:aws:s3:::${UserdataBucket}/public/*
-            Principal: "*"
+            Principal: '*'
+
   PipelineArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -102,13 +102,13 @@ Resources:
 
 Outputs:
   BucketName:
-    Description: "S3 Bucket Name"
+    Description: 'S3 Bucket Name'
     Value: !Ref UserdataBucket
     Export:
-      Name: !Sub "${AWS::StackName}-S3BucketName"
+      Name: !Sub '${AWS::StackName}-S3BucketName'
 
   PipelineArtifactBucketName:
-    Description: "Pipeline Artifact S3 Bucket Name"
+    Description: 'Pipeline Artifact S3 Bucket Name'
     Value: !Ref PipelineArtifactBucket
     Export:
-      Name: !Sub "${AWS::StackName}-S3PipelineArtifactBucketName"
+      Name: !Sub '${AWS::StackName}-S3PipelineArtifactBucketName'

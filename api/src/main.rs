@@ -32,18 +32,13 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(Data::new(api_http_handler.clone()))
             .service(
-                web::resource("/default/api/graphql")
+                web::resource("/api/graphql")
                     .guard(guard::Post())
                     .to(api_graphql_route),
-            )
-            .default_service(web::route().to(|req: HttpRequest| async move {
-                println!("Received request: {} {}", req.method(), req.path());
-                println!("Headers: {:?}", req.headers());
-                HttpResponse::Ok().body(format!("Path: {}, Method: {}", req.path(), req.method()))
-            }));
+            );
 
         app = app.service(
-            web::resource("/default/api/playground")
+            web::resource("/api/playground")
                 .guard(guard::Get())
                 .to(|| async { handle_playground("api") }),
         );
@@ -74,7 +69,7 @@ async fn api_graphql_route(
 }
 
 fn handle_playground(schema_name: &'static str) -> actix_web::Result<HttpResponse> {
-    let path = format!("/default/{}/graphql", schema_name);
+    let path = format!("/{}/graphql", schema_name);
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(my_playground_source(GraphQLPlaygroundConfig::new(&path))))

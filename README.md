@@ -9,7 +9,7 @@ make build
 ## Run App
 
 ```shell
-make run-db
+make run-api
 make run-local
 ```
 
@@ -30,35 +30,20 @@ make deploy
 6. aws cloudformation deploy --template-file cfn/sns.yaml --stack-name sns
 ```
 
-## SQLx
+## SeaORM
 
 ### Install tools
 
 ```shell
-cargo install sqlx-cli --features postgres
+cargo install sea-orm-cli
+sea-orm-cli migrate init
 ```
 
 ### Migration
 
 ```shell
-sqlx migrate add create_users_table -r
-sqlx migrate run
-```
-
-### Offline mode
-
-```shell
-cargo sqlx prepare --workspace
-```
-
-### Memo
-
-> IntellijIdea で `set DATABASE_URL to use query macros online` のエラーが出る場合
-
-Settings → Languages & Frameworks → Rust → Environment Variables で下記を追加
-
-```dotenv
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app
+sea-orm-cli migrate generate create_table_users
+cargo run -- refresh
 ```
 
 ## Docker auth

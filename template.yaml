@@ -4,6 +4,10 @@ Transform:
   - AWS::Serverless-2016-10-31
 
 Parameters:
+  SSMParameterName:
+    Type: String
+    Default: '/app/server/dotenv'
+    Description: 'SSM Parameter Store name for dotenv file'
   NetworkStackName:
     Type: String
     Default: 'network'
@@ -20,10 +24,6 @@ Parameters:
     Type: String
     Default: 'sns'
     Description: 'Name of the SNS stack'
-  SSMParameterName:
-    Type: String
-    Default: '/app/server/dotenv'
-    Description: 'SSM Parameter Store name for dotenv file'
 
 Globals:
   Function:
@@ -80,7 +80,7 @@ Resources:
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: default
+      StageName: api
       BinaryMediaTypes:
         - "*/*"
 
@@ -154,7 +154,7 @@ Resources:
 Outputs:
   ApiEndpoint:
     Description: 'API Gateway endpoint URL'
-    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/default/'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/api/'
 
   ApiFunctionArn:
     Description: 'API Function ARN'

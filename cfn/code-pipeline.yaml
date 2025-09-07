@@ -16,7 +16,7 @@ Parameters:
   GitHubRepoOwner:
     Description: github owner name
     Type: String
-    Default: NEOf-Inc
+    Default: neof-inc
   GitHubRepoName:
     Description: github repository name
     Type: String
@@ -24,15 +24,23 @@ Parameters:
   DockerConfigParameterName:
     Description: docker config parameter name
     Type: String
-    Default: ""
+    Default: ''
   S3StackName:
     Type: String
-    Default: "s3"
-    Description: "Name of the s3 stack"
+    Default: 's3'
+    Description: 'Name of the s3 stack'
+  RDSStackName:
+    Type: String
+    Default: 'rds'
+    Description: 'Name of the rds stack'
+  NetworkStackName:
+    Type: String
+    Default: 'network'
+    Description: 'Name of the network stack'
 
 Conditions:
   HasDockerConfigParameterName:
-    !Not [!Equals [!Ref DockerConfigParameterName, ""]]
+    !Not [ !Equals [ !Ref DockerConfigParameterName, '' ] ]
 
 Resources:
   BuildExecutionRole:
@@ -55,6 +63,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCertificateManagerFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+        - arn:aws:iam::aws:policy/AmazonVPCFullAccess
       Policies:
         - PolicyName: build-execution
           PolicyDocument:
@@ -93,6 +102,9 @@ Resources:
         EnvironmentVariables:
           - Name: ENV
             Value: !Ref EnvName
+          - Name: DATABASE_URL
+            Value: !ImportValue
+              Fn::Sub: '${RDSStackName}-ConnectionString'
           - !If
             - HasDockerConfigParameterName
             - Name: DOCKER_CONFIG_BODY
@@ -104,6 +116,15 @@ Resources:
       ServiceRole: !GetAtt BuildExecutionRole.Arn
       Source:
         Type: CODEPIPELINE
+      VpcConfig:
+        VpcId: !ImportValue
+          Fn::Sub: '${NetworkStackName}-VPCId'
+        Subnets:
+          - !ImportValue
+            Fn::Sub: '${NetworkStackName}-Subnet2Id'
+        SecurityGroupIds:
+          - !ImportValue
+            Fn::Sub: '${NetworkStackName}-CodeBuildSecurityGroupId'
 
   PipelineExecutionRole:
     Type: AWS::IAM::Role
@@ -160,7 +181,7 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !ImportValue
-          Fn::Sub: "${S3StackName}-S3PipelineArtifactBucketName"
+          Fn::Sub: '${S3StackName}-S3PipelineArtifactBucketName'
       Name: server-pipeline
       RestartExecutionOnUpdate: false
       RoleArn: !GetAtt PipelineExecutionRole.Arn
