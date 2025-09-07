@@ -1,6 +1,6 @@
 use crate::domain::order::Order;
-use crate::domain::string::impl_len_restricted_string_model;
-use crate::domain::time::{now, LocalDateTime};
+use crate::model::string::impl_len_restricted_string_model;
+use crate::model::time::{now, LocalDateTime};
 use crate::domain::{order, HasId};
 
 pub type Id = crate::domain::Id<Detail>;

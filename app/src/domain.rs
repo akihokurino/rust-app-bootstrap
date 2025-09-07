@@ -1,9 +1,7 @@
 pub mod order;
-pub mod string;
-pub mod time;
 pub mod user;
 
-use crate::domain::string::{impl_len_restricted_string_model, FromUnchecked};
+use crate::model::string::{impl_len_restricted_string_model, FromUnchecked};
 use derive_more::{AsRef, Display, Into};
 use rand::random;
 use serde::{Deserialize, Serialize};

@@ -41,13 +41,21 @@ deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 	sam build
 	sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
 
-.PHONY: run-local
-run-local:
+.PHONY: run-api
+run-api:
 	SSM_DOTENV_PARAMETER_NAME=/app/server/dotenv cargo run --bin api
 
 .PHONY: run-db
 run-db:
 	docker-compose up db
+
+.PHONY: run-migration
+run-migration:
+	sqlx migrate run
+
+.PHONY: reset-db
+reset-db:
+	docker-compose down -v && docker-compose up
 
 .PHONY: connect-rds
 connect-rds:
@@ -80,11 +88,3 @@ ssm-docker-config:
 	--name "/app/docker/config" \
 	--value file://.docker/config.json \
 	--type "SecureString"
-
-.PHONY: sqlx-prepare
-sqlx-prepare:
-	cargo sqlx prepare --workspace
-
-.PHONY: migrate-db
-migrate-db:
-	sqlx migrate run

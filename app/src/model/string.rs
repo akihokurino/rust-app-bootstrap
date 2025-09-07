@@ -1,6 +1,6 @@
 macro_rules! impl_len_restricted_string_model {
     ($typ:ident, $display_name:literal, $min:literal, $max:literal) => {
-        $crate::domain::string::impl_string_model!($typ);
+        $crate::model::string::impl_string_model!($typ);
 
         impl std::convert::TryFrom<String> for $typ {
             type Error = String;
@@ -53,7 +53,7 @@ macro_rules! impl_string_model {
                 &self.0
             }
         }
-        impl crate::domain::string::FromUnchecked<String> for $typ {
+        impl crate::model::string::FromUnchecked<String> for $typ {
             fn from_unchecked(value: String) -> Self {
                 Self(value)
             }
