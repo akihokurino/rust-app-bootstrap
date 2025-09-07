@@ -3,9 +3,9 @@ use crate::graphql::data_loader::user::UserDataLoader;
 use crate::graphql::service::types::user::User;
 use crate::graphql::shared::types::DateTime;
 use crate::graphql::GraphResult;
-use async_graphql::{Context, Object, ID};
 use app::domain;
 use app::errors::Kind::*;
+use async_graphql::{Context, Object, ID};
 use derive_more::From;
 
 #[derive(Debug, Clone, From)]
@@ -26,10 +26,10 @@ impl Order {
 
     async fn details(&self, ctx: &Context<'_>) -> GraphResult<Vec<OrderDetail>> {
         let resolver = ctx.data::<app::Resolver>()?;
-        let pool = resolver.session_manager.pool();
+        let db = resolver.session_manager.db();
         let details = resolver
             .order_detail_repository
-            .find_by_order(pool, &self.0.id)
+            .find_by_order(db, &self.0.id)
             .await?;
         Ok(details.into_iter().map(|v| v.into()).collect())
     }

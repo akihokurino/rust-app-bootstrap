@@ -1,6 +1,6 @@
-use async_graphql::{ErrorExtensions, FieldError};
 use app::errors::AppError;
 use app::errors::Kind::*;
+use async_graphql::{ErrorExtensions, FieldError};
 use derive_more::From;
 use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
@@ -34,6 +34,10 @@ impl Into<FieldError> for Error {
                 .msg
                 .clone()
                 .unwrap_or_else(|| "指定されたリソースが見つかりません".into()),
+            Duplicate => err
+                .msg
+                .clone()
+                .unwrap_or_else(|| "指定されたリソースは既に存在します".into()),
             Internal => "内部エラーが発生しました".into(),
         })
         .extend_with(|_, ext| {
@@ -44,6 +48,7 @@ impl Into<FieldError> for Error {
                     Unauthorized => "UNAUTHORIZED",
                     Forbidden => "FORBIDDEN",
                     NotFound => "NOT_FOUND",
+                    Duplicate => "DUPLICATED",
                     Internal => "INTERNAL",
                 }
                 .to_string(),

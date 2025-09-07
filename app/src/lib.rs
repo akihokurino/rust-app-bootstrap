@@ -1,7 +1,7 @@
 use crate::errors::AppError;
 use crate::infra::{lambda, s3, sns};
 use aws_config::BehaviorVersion;
-use infra::rdb::{session_manager, types};
+use infra::rdb::{repository, session_manager};
 use infra::ssm;
 #[allow(unused)]
 use once_cell;
@@ -22,9 +22,9 @@ pub struct Resolver {
     pub sns: sns::Adapter,
     pub lambda: lambda::Adapter,
     pub session_manager: session_manager::SessionManager,
-    pub user_repository: types::user::UserRepository,
-    pub order_repository: types::order::OrderRepository,
-    pub order_detail_repository: types::order_detail::OrderDetailRepository,
+    pub user_repository: repository::user::Repository,
+    pub order_repository: repository::order::Repository,
+    pub order_detail_repository: repository::order_detail::Repository,
 }
 
 static RESOLVER: OnceCell<Resolver> = OnceCell::const_new();
@@ -48,8 +48,6 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
     ssm.load_dotenv().await?;
     let envs = env::Environments::new();
 
-    println!("Loaded environment variables: {:?}", envs);
-
     let s3 = s3::Adapter::new(
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
@@ -57,9 +55,9 @@ pub async fn resolver() -> AppResult<&'static Resolver> {
     let sns = sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config));
     let lambda = lambda::Adapter::new(aws_sdk_lambda::Client::new(&aws_config));
     let session_manager = session_manager::SessionManager::new(&envs.database_url).await?;
-    let user_repository = types::user::UserRepository {};
-    let order_repository = types::order::OrderRepository {};
-    let order_detail_repository = types::order_detail::OrderDetailRepository {};
+    let user_repository = repository::user::Repository {};
+    let order_repository = repository::order::Repository {};
+    let order_detail_repository = repository::order_detail::Repository {};
 
     let resolver = Resolver {
         envs,

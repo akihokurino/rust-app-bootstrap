@@ -4,10 +4,10 @@ use crate::graphql::service::AppContext;
 use crate::graphql::service::AppResult;
 use crate::graphql::shared::types::BoolPayload;
 use crate::graphql::GraphResult;
-use async_graphql::{Context, Enum, InputObject, MergedObject, Object, SimpleObject};
 use app::domain;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Internal;
+use async_graphql::{Context, Enum, InputObject, MergedObject, Object, SimpleObject};
 use rand::Rng;
 
 #[derive(MergedObject, Default)]
@@ -70,12 +70,9 @@ impl DefaultMutation {
 
         let user = domain::user::User::new(uid, input.name.try_into().map_err(BadRequest.withf())?);
 
-        let mut tx = resolver.session_manager.tx_begin().await?;
-        resolver
-            .user_repository
-            .insert(tx.as_mut(), user.clone())
-            .await?;
-        resolver.session_manager.tx_commit(tx).await?;
+        let tx = resolver.session_manager.begin_tx().await?;
+        resolver.user_repository.insert(&tx, user.clone()).await?;
+        tx.commit().await?;
 
         Ok(user.into())
     }
@@ -84,14 +81,11 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let resolver = ctx.data::<app::Resolver>()?;
 
-        let mut tx = resolver.session_manager.tx_begin().await?;
-        let user = resolver.user_repository.get(tx.as_mut(), &uid).await?;
+        let tx = resolver.session_manager.begin_tx().await?;
+        let user = resolver.user_repository.get(&tx, &uid).await?;
         let user = user.update(input.name.try_into().map_err(BadRequest.withf())?);
-        resolver
-            .user_repository
-            .update(tx.as_mut(), user.clone())
-            .await?;
-        resolver.session_manager.tx_commit(tx).await?;
+        resolver.user_repository.update(&tx, user.clone()).await?;
+        tx.commit().await?;
 
         Ok(user.into())
     }
@@ -100,13 +94,10 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let resolver = ctx.data::<app::Resolver>()?;
 
-        let mut tx = resolver.session_manager.tx_begin().await?;
-        let user = resolver.user_repository.get(tx.as_mut(), &uid).await?;
-        resolver
-            .user_repository
-            .delete(tx.as_mut(), &user.id)
-            .await?;
-        resolver.session_manager.tx_commit(tx).await?;
+        let tx = resolver.session_manager.begin_tx().await?;
+        let user = resolver.user_repository.get(&tx, &uid).await?;
+        resolver.user_repository.delete(&tx, &user.id).await?;
+        tx.commit().await?;
 
         Ok(true.into())
     }
@@ -115,8 +106,8 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let resolver = ctx.data::<app::Resolver>()?;
 
-        let pool = resolver.session_manager.pool();
-        let me = resolver.user_repository.get(pool, &uid).await?;
+        let tx = resolver.session_manager.begin_tx().await?;
+        let me = resolver.user_repository.get(&tx, &uid).await?;
         let order = domain::order::Order::new(&me);
         let details = input
             .details
@@ -132,19 +123,11 @@ impl DefaultMutation {
                 Ok(domain::order::detail::Detail::new(&order, name, d.quantity))
             })
             .collect::<AppResult<Vec<domain::order::detail::Detail>>>()?;
-
-        let mut tx = resolver.session_manager.tx_begin().await?;
-        resolver
-            .order_repository
-            .insert(tx.as_mut(), order.clone())
-            .await?;
+        resolver.order_repository.insert(&tx, order.clone()).await?;
         for detail in details {
-            resolver
-                .order_detail_repository
-                .insert(tx.as_mut(), detail)
-                .await?;
+            resolver.order_detail_repository.insert(&tx, detail).await?;
         }
-        resolver.session_manager.tx_commit(tx).await?;
+        tx.commit().await?;
 
         Ok(order.into())
     }

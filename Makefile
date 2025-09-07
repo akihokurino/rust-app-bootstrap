@@ -75,8 +75,8 @@ connect-bastion:
 	aws ec2-instance-connect ssh --instance-id $${INSTANCE_ID} --os-user ec2-user
 
 # SecureStringをCloudFormation経由で作成できない
-.PHONY: ssm
-ssm:
+.PHONY: ssm-envs
+ssm-envs:
 	aws ssm put-parameter \
 	--name "/app/server/dotenv" \
 	--value "ENV=dev" \

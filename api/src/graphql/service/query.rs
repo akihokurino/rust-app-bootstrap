@@ -4,8 +4,8 @@ use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::{Me, User};
 use crate::graphql::service::AppContext;
 use crate::graphql::GraphResult;
-use async_graphql::{Context, MergedObject, Object, ID};
 use app::errors::Kind::BadRequest;
+use async_graphql::{Context, MergedObject, Object, ID};
 
 #[derive(MergedObject, Default)]
 pub struct QueryRoot(DefaultQuery);
@@ -38,8 +38,8 @@ impl DefaultQuery {
 
     async fn users(&self, ctx: &Context<'_>) -> GraphResult<Vec<User>> {
         let resolver = ctx.data::<app::Resolver>()?;
-        let pool = resolver.session_manager.pool();
-        let users = resolver.user_repository.find(pool).await?;
+        let db = resolver.session_manager.db();
+        let users = resolver.user_repository.find(db).await?;
         Ok(users.into_iter().map(|v| v.into()).collect())
     }
 

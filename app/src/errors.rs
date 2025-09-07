@@ -9,10 +9,28 @@ pub enum Kind {
     Unauthorized,
     Forbidden,
     NotFound,
+    Duplicate,
     Internal,
 }
 
 impl Kind {
+    pub fn default(self) -> AppError {
+        let msg = match self {
+            Kind::BadRequest => "不正なリクエストです",
+            Kind::Unauthorized => "認証に失敗しました",
+            Kind::Forbidden => "アクセスが許可されていません",
+            Kind::NotFound => "リソースが見つかりません",
+            Kind::Duplicate => "重複するリソースが存在します",
+            Kind::Internal => "内部エラーが発生しました",
+        };
+
+        AppError {
+            kind: self,
+            msg: Some(msg.to_string()),
+            src: None,
+        }
+    }
+
     pub fn with(self, msg: impl Into<String>) -> AppError {
         AppError {
             kind: self,
