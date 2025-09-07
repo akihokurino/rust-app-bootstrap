@@ -1,9 +1,32 @@
 use crate::domain::user::{Id, User};
 use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::map_insert_error;
-use crate::infra::rdb::types::user;
+use crate::infra::rdb::types::prelude::*;
+use crate::infra::rdb::types::users;
 use crate::AppResult;
-use sea_orm::{entity::prelude::*, ConnectionTrait, EntityTrait, QueryFilter, QueryOrder};
+use sea_orm::{entity::prelude::*, ConnectionTrait, EntityTrait, QueryFilter, QueryOrder, Set};
+
+impl TryFrom<users::Model> for User {
+    type Error = String;
+    fn try_from(v: users::Model) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: v.id.into(),
+            name: v.name.try_into()?,
+            created_at: v.created_at.into(),
+            updated_at: v.updated_at.into(),
+        })
+    }
+}
+impl From<User> for users::ActiveModel {
+    fn from(v: User) -> Self {
+        Self {
+            id: Set(v.id.into()),
+            name: Set(v.name.into()),
+            created_at: Set(v.created_at.into()),
+            updated_at: Set(v.updated_at.into()),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Repository {}
@@ -16,8 +39,8 @@ impl Repository {
     where
         C: ConnectionTrait,
     {
-        user::Entity::find()
-            .order_by_desc(user::Column::CreatedAt)
+        Users::find()
+            .order_by_desc(users::Column::CreatedAt)
             .all(db)
             .await
             .map_err(Internal.from_srcf())?
@@ -30,7 +53,7 @@ impl Repository {
     where
         C: ConnectionTrait,
     {
-        user::Entity::find_by_id(id.as_str())
+        Users::find_by_id(id.as_str())
             .one(db)
             .await
             .map_err(Internal.from_srcf())?
@@ -44,8 +67,8 @@ impl Repository {
         C: ConnectionTrait,
     {
         let ids: Vec<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
-        user::Entity::find()
-            .filter(user::Column::Id.is_in(ids))
+        Users::find()
+            .filter(users::Column::Id.is_in(ids))
             .all(db)
             .await
             .map_err(Internal.from_srcf())?
@@ -58,9 +81,9 @@ impl Repository {
     where
         C: ConnectionTrait,
     {
-        let active_model: user::ActiveModel = user.into();
+        let active_model: users::ActiveModel = user.into();
 
-        user::Entity::insert(active_model)
+        Users::insert(active_model)
             .exec(db)
             .await
             .map_err(map_insert_error)?;
@@ -73,10 +96,10 @@ impl Repository {
         C: ConnectionTrait,
     {
         let user_id = user.id.as_str().to_string();
-        let active_model: user::ActiveModel = user.into();
+        let active_model: users::ActiveModel = user.into();
 
-        user::Entity::update(active_model)
-            .filter(user::Column::Id.eq(user_id))
+        Users::update(active_model)
+            .filter(users::Column::Id.eq(user_id))
             .exec(db)
             .await
             .map_err(Internal.from_srcf())?;
@@ -88,7 +111,7 @@ impl Repository {
     where
         C: ConnectionTrait,
     {
-        user::Entity::delete_by_id(id.as_str())
+        Users::delete_by_id(id.as_str())
             .exec(db)
             .await
             .map_err(Internal.from_srcf())?;

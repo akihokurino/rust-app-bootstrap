@@ -49,6 +49,12 @@ run-db:
 run-migration:
 	cd migration && cargo run -- refresh
 
+.PHONY: gen
+gen:
+	sea-orm-cli generate entity \
+	-u postgresql://postgres:postgres@localhost:5432/app \
+	-o app/src/infra/rdb/types
+
 .PHONY: reset-db
 reset-db:
 	docker-compose down -v && docker-compose up
