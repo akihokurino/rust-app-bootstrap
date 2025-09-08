@@ -9,8 +9,8 @@ make build
 ## Run App
 
 ```shell
+make run-db
 make run-api
-make run-local
 ```
 
 ## Deploy App

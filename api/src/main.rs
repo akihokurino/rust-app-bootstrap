@@ -17,6 +17,8 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    app::infra::log::init();
+
     let api_http_handler = graphql::service::HttpHandler::new().await;
     let port = resolver.envs.port.clone();
 

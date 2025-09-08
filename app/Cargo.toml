@@ -23,3 +23,6 @@ dotenv-parser = "0.1"
 bytes = "1.10.1"
 email_address = "0.2.4"
 http = "1.3"
+tracing = { version = "0.1", features = [] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+atty = "0.2.14"
