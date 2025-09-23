@@ -11,7 +11,7 @@ Resources:
       InstanceType: t3.nano
       ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
       SubnetId:
-        Fn::ImportValue: !Sub '${NetworkStackName}-Subnet1Id'
+        Fn::ImportValue: !Sub '${NetworkStackName}-PublicSubnet1Id'
       SecurityGroupIds:
         - Fn::ImportValue: !Sub '${NetworkStackName}-BastionSecurityGroupId'
       Tags:

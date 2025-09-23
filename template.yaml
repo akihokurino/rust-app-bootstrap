@@ -34,7 +34,8 @@ Globals:
       SecurityGroupIds:
         - Fn::ImportValue: !Sub '${NetworkStackName}-LambdaSecurityGroupId'
       SubnetIds:
-        - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet2Id'
+        - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet1Id'
+        - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet2Id'
     Environment:
       Variables:
         WITH_LAMBDA: "true"

@@ -36,8 +36,8 @@ Resources:
     Properties:
       DBSubnetGroupDescription: 'Subnet group for RDS PostgreSQL'
       SubnetIds:
-        - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet1Id'
-        - Fn::ImportValue: !Sub '${NetworkStackName}-Subnet2Id'
+        - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet1Id'
+        - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet2Id'
       Tags:
         - Key: Name
           Value: rds-postgres-subnet-group
