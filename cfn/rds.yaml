@@ -46,7 +46,7 @@ Resources:
   PostgreSQLDatabase:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: postgres
+      DBInstanceIdentifier: app
       DBName: app
       DBInstanceClass: db.t3.micro
       Engine: postgres
