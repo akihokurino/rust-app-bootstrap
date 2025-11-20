@@ -108,7 +108,7 @@ impl std::error::Error for AppError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.src
             .as_ref()
-            .map(|v| (v.as_ref() as &(dyn std::error::Error + 'static)))
+            .map(|v| v.as_ref() as &(dyn std::error::Error + 'static))
     }
 }
 impl From<Kind> for AppError {
