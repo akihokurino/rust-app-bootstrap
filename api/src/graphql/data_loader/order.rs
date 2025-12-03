@@ -16,9 +16,9 @@ impl Loader<domain::order::Id> for OrderLoader {
         &self,
         keys: &[domain::order::Id],
     ) -> Result<HashMap<domain::order::Id, Self::Value>, Self::Error> {
-        let db = self.app.session_manager.db();
+        let conn = self.app.db_session.conn();
         let ids = keys.into_iter().collect::<Vec<_>>();
-        let items = self.app.order_repository.get_multi(db, ids).await?;
+        let items = self.app.order_repository.get_multi(conn, ids).await?;
         Ok(items.into_id_map())
     }
 }

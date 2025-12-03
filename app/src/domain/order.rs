@@ -1,8 +1,11 @@
 pub mod detail;
 
+use crate::adapter::DbConn;
 use crate::model::time::{now, LocalDateTime};
 use crate::domain::user::User;
 use crate::domain::{user, HasId};
+use crate::AppResult;
+use async_trait::async_trait;
 
 pub type Id = crate::domain::Id<Order>;
 #[derive(Debug, Clone)]
@@ -26,4 +29,15 @@ impl HasId for Order {
     fn id(&self) -> &crate::domain::Id<Self> {
         &self.id
     }
+}
+
+#[async_trait]
+pub trait OrderRepository: Send + Sync {
+    async fn find(&self, db: DbConn<'_>) -> AppResult<Vec<Order>>;
+    async fn find_by_user(&self, db: DbConn<'_>, user_id: &user::Id) -> AppResult<Vec<Order>>;
+    async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<Order>;
+    async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<Order>>;
+    async fn insert(&self, db: DbConn<'_>, order: Order) -> AppResult<()>;
+    async fn update(&self, db: DbConn<'_>, order: Order) -> AppResult<()>;
+    async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()>;
 }

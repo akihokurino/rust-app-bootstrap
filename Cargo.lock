@@ -370,6 +370,7 @@ dependencies = [
 name = "app"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "atty",
  "aws-config",
  "aws-sdk-lambda",

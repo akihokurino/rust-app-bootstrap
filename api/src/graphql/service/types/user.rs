@@ -19,8 +19,8 @@ impl Me {
 
     async fn orders(&self, ctx: &Context<'_>) -> GraphResult<Vec<Order>> {
         let app = ctx.data::<app::App>()?;
-        let db = app.session_manager.db();
-        let orders = app.order_repository.find_by_user(db, &self.0.id).await?;
+        let conn = app.db_session.conn();
+        let orders = app.order_repository.find_by_user(conn, &self.0.id).await?;
         Ok(orders.into_iter().map(|v| v.into()).collect())
     }
 

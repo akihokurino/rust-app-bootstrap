@@ -1,9 +1,10 @@
 pub mod types;
 
+use crate::adapter::TaskQueue;
 use crate::errors::Kind::*;
 use crate::AppResult;
+use async_trait::async_trait;
 use aws_sdk_sns::Client;
-use serde::Serialize;
 
 #[derive(Clone, Debug)]
 pub struct Adapter {
@@ -14,11 +15,11 @@ impl Adapter {
     pub fn new(client: Client) -> Self {
         Self { client }
     }
+}
 
-    pub async fn publish<Req>(&self, input: Req, arn: String) -> AppResult<()>
-    where
-        Req: Serialize,
-    {
+#[async_trait]
+impl TaskQueue for Adapter {
+    async fn publish(&self, input: serde_json::Value, arn: String) -> AppResult<()> {
         let json = serde_json::to_string(&input).map_err(Internal.from_srcf())?;
         self.client
             .publish()

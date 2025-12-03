@@ -1,6 +1,9 @@
+use crate::adapter::DbConn;
 use crate::model::string::impl_len_restricted_string_model;
 use crate::model::time::{now, LocalDateTime};
 use crate::domain::HasId;
+use crate::AppResult;
+use async_trait::async_trait;
 
 pub type Id = crate::domain::Id<User>;
 #[derive(Debug, Clone)]
@@ -35,3 +38,13 @@ impl HasId for User {
 }
 
 impl_len_restricted_string_model!(Name, "ユーザー名", 1, 255);
+
+#[async_trait]
+pub trait UserRepository: Send + Sync {
+    async fn find(&self, db: DbConn<'_>) -> AppResult<Vec<User>>;
+    async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<User>;
+    async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<User>>;
+    async fn insert(&self, db: DbConn<'_>, user: User) -> AppResult<()>;
+    async fn update(&self, db: DbConn<'_>, user: User) -> AppResult<()>;
+    async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()>;
+}

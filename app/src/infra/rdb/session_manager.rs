@@ -1,5 +1,7 @@
+use crate::adapter::{DBSession, DbConn};
 use crate::errors::Kind::Internal;
 use crate::AppResult;
+use async_trait::async_trait;
 use sea_orm::{
     ConnectOptions, Database, DatabaseConnection, DatabaseTransaction, TransactionTrait,
 };
@@ -28,17 +30,25 @@ impl SessionManager {
         Ok(Self { db })
     }
 
+    #[allow(dead_code)]
     pub async fn from_env() -> AppResult<Self> {
         let database_url =
             env::var("DATABASE_URL").map_err(|_| Internal.with("Failed for database url"))?;
         Self::new(&database_url).await
     }
+}
 
-    pub fn db(&self) -> &DatabaseConnection {
+#[async_trait]
+impl DBSession for SessionManager {
+    fn db(&self) -> &DatabaseConnection {
         &self.db
     }
 
-    pub async fn begin_tx(&self) -> AppResult<TransactionGuard> {
+    fn conn(&self) -> DbConn<'_> {
+        DbConn::Db(&self.db)
+    }
+
+    async fn begin_tx(&self) -> AppResult<TransactionGuard> {
         let tx = self.db.begin().await.map_err(Internal.from_srcf())?;
         Ok(TransactionGuard::new(tx))
     }
@@ -59,6 +69,10 @@ impl TransactionGuard {
 
     pub fn as_ref(&self) -> &DatabaseTransaction {
         self.inner.as_ref().expect("Transaction already consumed")
+    }
+
+    pub fn conn(&self) -> DbConn<'_> {
+        DbConn::Tx(self)
     }
 
     pub async fn commit(mut self) -> AppResult<()> {

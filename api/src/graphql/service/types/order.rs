@@ -26,10 +26,10 @@ impl Order {
 
     async fn details(&self, ctx: &Context<'_>) -> GraphResult<Vec<OrderDetail>> {
         let app = ctx.data::<app::App>()?;
-        let db = app.session_manager.db();
+        let conn = app.db_session.conn();
         let details = app
             .order_detail_repository
-            .find_by_order(db, &self.0.id)
+            .find_by_order(conn, &self.0.id)
             .await?;
         Ok(details.into_iter().map(|v| v.into()).collect())
     }

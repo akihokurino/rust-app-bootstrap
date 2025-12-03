@@ -1,11 +1,13 @@
+use crate::adapter::DbConn;
 use crate::domain::order;
-use crate::domain::order::detail::{Detail, Id};
+use crate::domain::order::detail::{Detail, Id, OrderDetailRepository};
 use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::map_insert_error;
 use crate::infra::rdb::types::order_details;
 use crate::infra::rdb::types::prelude::*;
 use crate::AppResult;
-use sea_orm::{entity::prelude::*, ConnectionTrait, EntityTrait, QueryFilter, QueryOrder, Set};
+use async_trait::async_trait;
+use sea_orm::{entity::prelude::*, EntityTrait, QueryFilter, QueryOrder, Set};
 
 impl TryFrom<order_details::Model> for Detail {
     type Error = String;
@@ -34,20 +36,20 @@ impl From<Detail> for order_details::ActiveModel {
 }
 
 #[derive(Debug, Clone)]
-pub struct Repository {}
+pub struct Repository;
 
 impl Repository {
     pub fn new() -> Self {
-        Self {}
+        Self
     }
+}
 
-    pub async fn find<C>(&self, db: &C) -> AppResult<Vec<Detail>>
-    where
-        C: ConnectionTrait,
-    {
+#[async_trait]
+impl OrderDetailRepository for Repository {
+    async fn find(&self, db: DbConn<'_>) -> AppResult<Vec<Detail>> {
         OrderDetails::find()
             .order_by_desc(order_details::Column::CreatedAt)
-            .all(db)
+            .all(&db)
             .await
             .map_err(Internal.from_srcf())?
             .into_iter()
@@ -55,14 +57,11 @@ impl Repository {
             .collect()
     }
 
-    pub async fn find_by_order<C>(&self, db: &C, order_id: &order::Id) -> AppResult<Vec<Detail>>
-    where
-        C: ConnectionTrait,
-    {
+    async fn find_by_order(&self, db: DbConn<'_>, order_id: &order::Id) -> AppResult<Vec<Detail>> {
         OrderDetails::find()
             .filter(order_details::Column::OrderId.eq(order_id.as_str()))
             .order_by_desc(order_details::Column::CreatedAt)
-            .all(db)
+            .all(&db)
             .await
             .map_err(Internal.from_srcf())?
             .into_iter()
@@ -70,12 +69,9 @@ impl Repository {
             .collect()
     }
 
-    pub async fn get<C>(&self, db: &C, id: &Id) -> AppResult<Detail>
-    where
-        C: ConnectionTrait,
-    {
+    async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<Detail> {
         OrderDetails::find_by_id(id.as_str())
-            .one(db)
+            .one(&db)
             .await
             .map_err(Internal.from_srcf())?
             .ok_or_else(|| NotFound.default())?
@@ -83,14 +79,11 @@ impl Repository {
             .map_err(Internal.withf())
     }
 
-    pub async fn get_multi<C>(&self, db: &C, ids: Vec<&Id>) -> AppResult<Vec<Detail>>
-    where
-        C: ConnectionTrait,
-    {
+    async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<Detail>> {
         let ids: Vec<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
         OrderDetails::find()
             .filter(order_details::Column::Id.is_in(ids))
-            .all(db)
+            .all(&db)
             .await
             .map_err(Internal.from_srcf())?
             .into_iter()
@@ -98,42 +91,33 @@ impl Repository {
             .collect()
     }
 
-    pub async fn insert<C>(&self, db: &C, detail: Detail) -> AppResult<()>
-    where
-        C: ConnectionTrait,
-    {
+    async fn insert(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()> {
         let active_model: order_details::ActiveModel = detail.into();
 
         OrderDetails::insert(active_model)
-            .exec(db)
+            .exec(&db)
             .await
             .map_err(map_insert_error)?;
 
         Ok(())
     }
 
-    pub async fn update<C>(&self, db: &C, detail: Detail) -> AppResult<()>
-    where
-        C: ConnectionTrait,
-    {
+    async fn update(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()> {
         let detail_id = detail.id.as_str().to_string();
         let active_model: order_details::ActiveModel = detail.into();
 
         OrderDetails::update(active_model)
             .filter(order_details::Column::Id.eq(detail_id))
-            .exec(db)
+            .exec(&db)
             .await
             .map_err(Internal.from_srcf())?;
 
         Ok(())
     }
 
-    pub async fn delete<C>(&self, db: &C, id: &Id) -> AppResult<()>
-    where
-        C: ConnectionTrait,
-    {
+    async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()> {
         OrderDetails::delete_by_id(id.as_str())
-            .exec(db)
+            .exec(&db)
             .await
             .map_err(Internal.from_srcf())?;
 

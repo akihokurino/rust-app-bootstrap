@@ -1,7 +1,10 @@
+use crate::adapter::DbConn;
 use crate::domain::order::Order;
 use crate::model::string::impl_len_restricted_string_model;
 use crate::model::time::{now, LocalDateTime};
 use crate::domain::{order, HasId};
+use crate::AppResult;
+use async_trait::async_trait;
 
 pub type Id = crate::domain::Id<Detail>;
 #[derive(Debug, Clone)]
@@ -32,3 +35,14 @@ impl HasId for Detail {
 }
 
 impl_len_restricted_string_model!(Name, "商品名", 1, 255);
+
+#[async_trait]
+pub trait OrderDetailRepository: Send + Sync {
+    async fn find(&self, db: DbConn<'_>) -> AppResult<Vec<Detail>>;
+    async fn find_by_order(&self, db: DbConn<'_>, order_id: &order::Id) -> AppResult<Vec<Detail>>;
+    async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<Detail>;
+    async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<Detail>>;
+    async fn insert(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()>;
+    async fn update(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()>;
+    async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()>;
+}

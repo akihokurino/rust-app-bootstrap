@@ -22,8 +22,8 @@ impl DefaultQuery {
         let _uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
         let presign_url = app
-            .s3
-            .pre_sign_for_get(&key.try_into().map_err(BadRequest.withf())?)
+            .storage
+            .presign_for_get(&key.try_into().map_err(BadRequest.withf())?)
             .await?;
         Ok(presign_url.to_string())
     }
@@ -38,8 +38,8 @@ impl DefaultQuery {
 
     async fn users(&self, ctx: &Context<'_>) -> GraphResult<Vec<User>> {
         let app = ctx.data::<app::App>()?;
-        let db = app.session_manager.db();
-        let users = app.user_repository.find(db).await?;
+        let conn = app.db_session.conn();
+        let users = app.user_repository.find(conn).await?;
         Ok(users.into_iter().map(|v| v.into()).collect())
     }
 

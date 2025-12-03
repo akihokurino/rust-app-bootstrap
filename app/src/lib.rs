@@ -1,30 +1,58 @@
+use crate::adapter::{DBSession, RemoteFunction, Storage, TaskQueue};
+use crate::domain::order::detail::OrderDetailRepository;
+use crate::domain::order::OrderRepository;
+use crate::domain::user::UserRepository;
 use crate::errors::AppError;
-use crate::infra::{lambda, s3, sns};
 use aws_config::BehaviorVersion;
 use infra::rdb::{repository, session_manager};
 use infra::ssm;
+use infra::{lambda, s3, sns};
 #[allow(unused)]
 use once_cell;
+use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
 
+pub mod adapter;
 pub mod domain;
 mod env;
 pub mod errors;
-pub mod infra;
+mod infra;
 pub mod model;
 
 pub type AppResult<T> = Result<T, AppError>;
 
-#[derive(Debug, Clone)]
 pub struct App {
     pub env: env::Env,
-    pub s3: s3::Adapter,
-    pub sns: sns::Adapter,
-    pub lambda: lambda::Adapter,
-    pub session_manager: session_manager::SessionManager,
-    pub user_repository: repository::user::Repository,
-    pub order_repository: repository::order::Repository,
-    pub order_detail_repository: repository::order_detail::Repository,
+    pub storage: Arc<dyn Storage>,
+    pub task_queue: Arc<dyn TaskQueue>,
+    pub remote_function: Arc<dyn RemoteFunction>,
+    pub db_session: Arc<dyn DBSession>,
+    pub user_repository: Arc<dyn UserRepository>,
+    pub order_repository: Arc<dyn OrderRepository>,
+    pub order_detail_repository: Arc<dyn OrderDetailRepository>,
+}
+
+impl Clone for App {
+    fn clone(&self) -> Self {
+        Self {
+            env: self.env.clone(),
+            storage: Arc::clone(&self.storage),
+            task_queue: Arc::clone(&self.task_queue),
+            remote_function: Arc::clone(&self.remote_function),
+            db_session: Arc::clone(&self.db_session),
+            user_repository: Arc::clone(&self.user_repository),
+            order_repository: Arc::clone(&self.order_repository),
+            order_detail_repository: Arc::clone(&self.order_detail_repository),
+        }
+    }
+}
+
+impl std::fmt::Debug for App {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("App")
+            .field("env", &self.env)
+            .finish_non_exhaustive()
+    }
 }
 
 static APP: OnceCell<App> = OnceCell::const_new();
@@ -48,24 +76,29 @@ pub async fn app() -> AppResult<&'static App> {
     ssm.load_dotenv().await?;
     let envs = env::Env::new();
 
-    let s3 = s3::Adapter::new(
+    let storage: Arc<dyn Storage> = Arc::new(s3::Adapter::new(
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
-    );
-    let sns = sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config));
-    let lambda = lambda::Adapter::new(aws_sdk_lambda::Client::new(&aws_config));
+    ));
+    let task_queue: Arc<dyn TaskQueue> =
+        Arc::new(sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config)));
+    let remote_function: Arc<dyn RemoteFunction> = Arc::new(lambda::Adapter::new(
+        aws_sdk_lambda::Client::new(&aws_config),
+    ));
 
-    let session_manager = session_manager::SessionManager::new(&envs.database_url).await?;
-    let user_repository = repository::user::Repository {};
-    let order_repository = repository::order::Repository {};
-    let order_detail_repository = repository::order_detail::Repository {};
+    let db_session: Arc<dyn DBSession> =
+        Arc::new(session_manager::SessionManager::new(&envs.database_url).await?);
+    let user_repository: Arc<dyn UserRepository> = Arc::new(repository::user::Repository::new());
+    let order_repository: Arc<dyn OrderRepository> = Arc::new(repository::order::Repository::new());
+    let order_detail_repository: Arc<dyn OrderDetailRepository> =
+        Arc::new(repository::order_detail::Repository::new());
 
     let app = App {
         env: envs,
-        s3,
-        sns,
-        lambda,
-        session_manager,
+        storage,
+        task_queue,
+        remote_function,
+        db_session,
         user_repository,
         order_repository,
         order_detail_repository,
@@ -73,4 +106,8 @@ pub async fn app() -> AppResult<&'static App> {
 
     APP.set(app).unwrap();
     Ok(APP.get().unwrap())
+}
+
+pub fn init_log() {
+    infra::log::init();
 }

@@ -29,8 +29,8 @@ impl DefaultMutation {
 
         let key = format!("{}/{}/{}", input.path.path_string(), uid.as_str(), file_id);
         let url = app
-            .s3
-            .pre_sign_for_upload(&key.clone().try_into().map_err(Internal.withf())?)
+            .storage
+            .presign_for_upload(&key.clone().try_into().map_err(Internal.withf())?)
             .await?;
         Ok(PreSignUploadPayload {
             file_id,
@@ -41,24 +41,32 @@ impl DefaultMutation {
 
     async fn call_async_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
         let app = ctx.data::<app::App>()?;
-        let payload = app::infra::sns::types::AsyncTaskPayload {
+        let payload = app::model::task::AsyncTaskPayload {
             name: "My Async Task".to_string(),
         };
-        app.sns
-            .publish(payload, app.env.sns_async_task_topic_arn.clone())
+        app.task_queue
+            .publish(
+                serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
+                app.env.sns_async_task_topic_arn.clone(),
+            )
             .await?;
         Ok(true.into())
     }
 
     async fn call_sync_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
         let app = ctx.data::<app::App>()?;
-        let payload = app::infra::lambda::types::SyncTaskPayload {
+        let payload = app::model::task::SyncTaskPayload {
             name: "My Sync Task".to_string(),
         };
-        let resp: app::infra::lambda::types::SyncTaskResponse = app
-            .lambda
-            .invoke(payload, app.env.sync_task_lambda_arn.clone())
+        let resp_value = app
+            .remote_function
+            .invoke(
+                serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
+                app.env.sync_task_lambda_arn.clone(),
+            )
             .await?;
+        let resp: app::model::task::SyncTaskResponse =
+            serde_json::from_value(resp_value).map_err(Internal.from_srcf())?;
         println!("Sync task response: {:?}", resp);
         Ok(true.into())
     }
@@ -69,8 +77,8 @@ impl DefaultMutation {
 
         let user = domain::user::User::new(uid, input.name.try_into().map_err(BadRequest.withf())?);
 
-        let tx = app.session_manager.begin_tx().await?;
-        app.user_repository.insert(&tx, user.clone()).await?;
+        let tx = app.db_session.begin_tx().await?;
+        app.user_repository.insert(tx.conn(), user.clone()).await?;
         tx.commit().await?;
 
         Ok(user.into())
@@ -80,10 +88,10 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
-        let tx = app.session_manager.begin_tx().await?;
-        let user = app.user_repository.get(&tx, &uid).await?;
+        let tx = app.db_session.begin_tx().await?;
+        let user = app.user_repository.get(tx.conn(), &uid).await?;
         let user = user.update(input.name.try_into().map_err(BadRequest.withf())?);
-        app.user_repository.update(&tx, user.clone()).await?;
+        app.user_repository.update(tx.conn(), user.clone()).await?;
         tx.commit().await?;
 
         Ok(user.into())
@@ -93,9 +101,9 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
-        let tx = app.session_manager.begin_tx().await?;
-        let user = app.user_repository.get(&tx, &uid).await?;
-        app.user_repository.delete(&tx, &user.id).await?;
+        let tx = app.db_session.begin_tx().await?;
+        let user = app.user_repository.get(tx.conn(), &uid).await?;
+        app.user_repository.delete(tx.conn(), &user.id).await?;
         tx.commit().await?;
 
         Ok(true.into())
@@ -105,8 +113,8 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
-        let tx = app.session_manager.begin_tx().await?;
-        let me = app.user_repository.get(&tx, &uid).await?;
+        let tx = app.db_session.begin_tx().await?;
+        let me = app.user_repository.get(tx.conn(), &uid).await?;
         let order = domain::order::Order::new(&me);
         let details = input
             .details
@@ -122,9 +130,13 @@ impl DefaultMutation {
                 Ok(domain::order::detail::Detail::new(&order, name, d.quantity))
             })
             .collect::<AppResult<Vec<domain::order::detail::Detail>>>()?;
-        app.order_repository.insert(&tx, order.clone()).await?;
+        app.order_repository
+            .insert(tx.conn(), order.clone())
+            .await?;
         for detail in details {
-            app.order_detail_repository.insert(&tx, detail).await?;
+            app.order_detail_repository
+                .insert(tx.conn(), detail)
+                .await?;
         }
         tx.commit().await?;
 
