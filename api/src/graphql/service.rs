@@ -7,14 +7,14 @@ use crate::graphql::service::query::QueryRoot;
 use crate::graphql::{data_loader, GraphResult};
 use actix_web::http::header::{HeaderMap, HeaderValue};
 use actix_web::HttpRequest;
-use async_graphql::{Context, EmptySubscription};
-use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use async_trait::async_trait;
 use app::domain;
 use app::errors::AppError;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Unauthorized;
 use app::AppResult;
+use async_graphql::{Context, EmptySubscription};
+use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
+use async_trait::async_trait;
 
 type AuthorizedUserId = domain::user::Id;
 
@@ -45,18 +45,15 @@ pub struct HttpHandler {
 
 impl HttpHandler {
     pub async fn new() -> Self {
-        let resolver = app::resolver()
-            .await
-            .expect("Failed to initialize rdb resolver")
-            .clone();
+        let app = app::app().await.expect("Failed to initialize app").clone();
         let schema = Schema::build(
             QueryRoot::default(),
             MutationRoot::default(),
             EmptySubscription,
         )
-        .data(resolver.clone())
-        .data(data_loader::user::new_loader(resolver.clone()))
-        .data(data_loader::order::new_loader(resolver.clone()))
+        .data(app.clone())
+        .data(data_loader::user::new_loader(app.clone()))
+        .data(data_loader::order::new_loader(app.clone()))
         .finish();
 
         HttpHandler { schema }

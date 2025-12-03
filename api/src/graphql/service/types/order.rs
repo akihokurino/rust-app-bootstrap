@@ -25,9 +25,9 @@ impl Order {
     }
 
     async fn details(&self, ctx: &Context<'_>) -> GraphResult<Vec<OrderDetail>> {
-        let resolver = ctx.data::<app::Resolver>()?;
-        let db = resolver.session_manager.db();
-        let details = resolver
+        let app = ctx.data::<app::App>()?;
+        let db = app.session_manager.db();
+        let details = app
             .order_detail_repository
             .find_by_order(db, &self.0.id)
             .await?;

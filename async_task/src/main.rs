@@ -20,10 +20,10 @@ async fn bridge(event: LambdaEvent<Value>) -> Result<(), Error> {
 }
 
 async fn exec(payload: Value) -> AppResult<()> {
-    let _resolver = match app::resolver().await {
+    let _app = match app::app().await {
         Ok(res) => res,
         Err(err) => {
-            panic!("Failed to initialize resolver: {:?}", err);
+            panic!("Failed to initialize app: {:?}", err);
         }
     };
 

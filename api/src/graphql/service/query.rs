@@ -20,8 +20,8 @@ impl DefaultQuery {
 
     async fn pre_sign_download(&self, ctx: &Context<'_>, key: String) -> GraphResult<String> {
         let _uid = ctx.verified_user_id()?;
-        let resolver = ctx.data::<app::Resolver>()?;
-        let presign_url = resolver
+        let app = ctx.data::<app::App>()?;
+        let presign_url = app
             .s3
             .pre_sign_for_get(&key.try_into().map_err(BadRequest.withf())?)
             .await?;
@@ -37,9 +37,9 @@ impl DefaultQuery {
     }
 
     async fn users(&self, ctx: &Context<'_>) -> GraphResult<Vec<User>> {
-        let resolver = ctx.data::<app::Resolver>()?;
-        let db = resolver.session_manager.db();
-        let users = resolver.user_repository.find(db).await?;
+        let app = ctx.data::<app::App>()?;
+        let db = app.session_manager.db();
+        let users = app.user_repository.find(db).await?;
         Ok(users.into_iter().map(|v| v.into()).collect())
     }
 

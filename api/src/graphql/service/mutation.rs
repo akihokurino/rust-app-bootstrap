@@ -23,12 +23,12 @@ impl DefaultMutation {
         input: PreSignUploadInput,
     ) -> GraphResult<PreSignUploadPayload> {
         let uid = ctx.verified_user_id()?;
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
 
         let file_id = base_62::encode(&rand::rng().random::<[u8; 16]>());
 
         let key = format!("{}/{}/{}", input.path.path_string(), uid.as_str(), file_id);
-        let url = resolver
+        let url = app
             .s3
             .pre_sign_for_upload(&key.clone().try_into().map_err(Internal.withf())?)
             .await?;
@@ -40,25 +40,24 @@ impl DefaultMutation {
     }
 
     async fn call_async_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
         let payload = app::infra::sns::types::AsyncTaskPayload {
             name: "My Async Task".to_string(),
         };
-        resolver
-            .sns
-            .publish(payload, resolver.envs.sns_async_task_topic_arn.clone())
+        app.sns
+            .publish(payload, app.env.sns_async_task_topic_arn.clone())
             .await?;
         Ok(true.into())
     }
 
     async fn call_sync_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
         let payload = app::infra::lambda::types::SyncTaskPayload {
             name: "My Sync Task".to_string(),
         };
-        let resp: app::infra::lambda::types::SyncTaskResponse = resolver
+        let resp: app::infra::lambda::types::SyncTaskResponse = app
             .lambda
-            .invoke(payload, resolver.envs.sync_task_lambda_arn.clone())
+            .invoke(payload, app.env.sync_task_lambda_arn.clone())
             .await?;
         println!("Sync task response: {:?}", resp);
         Ok(true.into())
@@ -66,12 +65,12 @@ impl DefaultMutation {
 
     async fn user_create(&self, ctx: &Context<'_>, input: UserCreateInput) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
 
         let user = domain::user::User::new(uid, input.name.try_into().map_err(BadRequest.withf())?);
 
-        let tx = resolver.session_manager.begin_tx().await?;
-        resolver.user_repository.insert(&tx, user.clone()).await?;
+        let tx = app.session_manager.begin_tx().await?;
+        app.user_repository.insert(&tx, user.clone()).await?;
         tx.commit().await?;
 
         Ok(user.into())
@@ -79,12 +78,12 @@ impl DefaultMutation {
 
     async fn user_update(&self, ctx: &Context<'_>, input: UserUpdateInput) -> GraphResult<Me> {
         let uid = ctx.verified_user_id()?;
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
 
-        let tx = resolver.session_manager.begin_tx().await?;
-        let user = resolver.user_repository.get(&tx, &uid).await?;
+        let tx = app.session_manager.begin_tx().await?;
+        let user = app.user_repository.get(&tx, &uid).await?;
         let user = user.update(input.name.try_into().map_err(BadRequest.withf())?);
-        resolver.user_repository.update(&tx, user.clone()).await?;
+        app.user_repository.update(&tx, user.clone()).await?;
         tx.commit().await?;
 
         Ok(user.into())
@@ -92,11 +91,11 @@ impl DefaultMutation {
 
     async fn user_delete(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
         let uid = ctx.verified_user_id()?;
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
 
-        let tx = resolver.session_manager.begin_tx().await?;
-        let user = resolver.user_repository.get(&tx, &uid).await?;
-        resolver.user_repository.delete(&tx, &user.id).await?;
+        let tx = app.session_manager.begin_tx().await?;
+        let user = app.user_repository.get(&tx, &uid).await?;
+        app.user_repository.delete(&tx, &user.id).await?;
         tx.commit().await?;
 
         Ok(true.into())
@@ -104,10 +103,10 @@ impl DefaultMutation {
 
     async fn order_create(&self, ctx: &Context<'_>, input: OrderCreateInput) -> GraphResult<Order> {
         let uid = ctx.verified_user_id()?;
-        let resolver = ctx.data::<app::Resolver>()?;
+        let app = ctx.data::<app::App>()?;
 
-        let tx = resolver.session_manager.begin_tx().await?;
-        let me = resolver.user_repository.get(&tx, &uid).await?;
+        let tx = app.session_manager.begin_tx().await?;
+        let me = app.user_repository.get(&tx, &uid).await?;
         let order = domain::order::Order::new(&me);
         let details = input
             .details
@@ -123,9 +122,9 @@ impl DefaultMutation {
                 Ok(domain::order::detail::Detail::new(&order, name, d.quantity))
             })
             .collect::<AppResult<Vec<domain::order::detail::Detail>>>()?;
-        resolver.order_repository.insert(&tx, order.clone()).await?;
+        app.order_repository.insert(&tx, order.clone()).await?;
         for detail in details {
-            resolver.order_detail_repository.insert(&tx, detail).await?;
+            app.order_detail_repository.insert(&tx, detail).await?;
         }
         tx.commit().await?;
 

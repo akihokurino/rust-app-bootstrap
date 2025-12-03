@@ -10,17 +10,17 @@ use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let resolver = match app::resolver().await {
+    let app = match app::app().await {
         Ok(res) => res,
         Err(err) => {
-            panic!("Failed to initialize resolver: {:?}", err);
+            panic!("Failed to initialize app: {:?}", err);
         }
     };
 
     app::infra::log::init();
 
     let api_http_handler = graphql::service::HttpHandler::new().await;
-    let port = resolver.envs.port.clone();
+    let port = app.env.port.clone();
 
     let app_factory = move || {
         let mut app = App::new()
@@ -48,7 +48,7 @@ async fn main() -> std::io::Result<()> {
         app
     };
 
-    if resolver.envs.with_lambda {
+    if app.env.with_lambda {
         println!("listen as lambda function");
         lambda_web::run_actix_on_lambda(app_factory)
             .await

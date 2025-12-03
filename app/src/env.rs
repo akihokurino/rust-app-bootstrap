@@ -5,7 +5,7 @@ fn must_env(k: &str) -> String {
 }
 
 #[derive(Debug, Clone)]
-pub struct Environments {
+pub struct Env {
     pub env: String,
     pub port: String,
     pub with_lambda: bool,
@@ -14,9 +14,9 @@ pub struct Environments {
     pub sns_async_task_topic_arn: String,
     pub sync_task_lambda_arn: String,
 }
-impl Environments {
+impl Env {
     pub fn new() -> Self {
-        Environments {
+        Env {
             env: must_env("ENV"),
             port: std::env::var("PORT").unwrap_or("8080".to_string()),
             with_lambda: std::env::var("WITH_LAMBDA")
