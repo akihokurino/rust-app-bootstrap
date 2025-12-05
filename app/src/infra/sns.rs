@@ -1,5 +1,3 @@
-pub mod types;
-
 use crate::adapter::TaskQueue;
 use crate::errors::Kind::*;
 use crate::AppResult;
