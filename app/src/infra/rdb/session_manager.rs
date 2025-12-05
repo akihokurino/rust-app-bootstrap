@@ -18,12 +18,12 @@ pub struct SessionManager {
 impl SessionManager {
     pub async fn new(database_url: &str) -> AppResult<Self> {
         let mut opt = ConnectOptions::new(database_url);
-        opt.max_connections(5)
+        opt.max_connections(2)
             .min_connections(1)
-            .connect_timeout(Duration::from_secs(8))
-            .acquire_timeout(Duration::from_secs(8))
-            .idle_timeout(Duration::from_secs(8))
-            .max_lifetime(Duration::from_secs(8));
+            .connect_timeout(Duration::from_secs(10))
+            .acquire_timeout(Duration::from_secs(10))
+            .idle_timeout(Duration::from_secs(300))
+            .max_lifetime(Duration::from_secs(1800));
 
         let db = Database::connect(opt).await.map_err(Internal.from_srcf())?;
 
