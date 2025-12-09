@@ -54,6 +54,7 @@ gen:
 	sea-orm-cli generate entity \
 	-u postgresql://postgres:postgres@localhost:5432/app \
 	-o app/src/infra/rdb/types
+	sed -i '' '1a\'$$'\n''#![allow(unused)]' app/src/infra/rdb/types/prelude.rs
 
 .PHONY: reset-db
 reset-db:
