@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use app::model::task::{SyncTaskPayload, SyncTaskResponse};
+use app::domain::types::task::{SyncTaskPayload, SyncTaskResponse};
 use app::AppResult;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 

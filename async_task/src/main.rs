@@ -1,6 +1,6 @@
 use anyhow::anyhow;
+use app::domain::types::task::{AsyncTaskPayload, EventData};
 use app::errors::Kind::BadRequest;
-use app::model::task::{AsyncTaskPayload, EventData};
 use app::AppResult;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use serde_json::Value;

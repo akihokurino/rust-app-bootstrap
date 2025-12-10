@@ -1,13 +1,14 @@
 pub mod order;
+pub mod types;
 pub mod user;
 
-use crate::model::string::{impl_len_restricted_string_model, FromUnchecked};
 use derive_more::{AsRef, Display, Into};
 use rand::random;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
+use types::string::{impl_len_restricted_string_model, FromUnchecked};
 
 pub trait HasId<T = Self>: Sized {
     fn id(&self) -> &Id<T>;

@@ -17,7 +17,6 @@ pub mod domain;
 mod env;
 pub mod errors;
 mod infra;
-pub mod model;
 
 pub type AppResult<T> = Result<T, AppError>;
 

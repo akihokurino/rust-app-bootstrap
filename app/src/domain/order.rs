@@ -1,7 +1,7 @@
 pub mod detail;
 
 use crate::adapter::DbConn;
-use crate::model::time::{now, LocalDateTime};
+use crate::domain::types::time::{now, LocalDateTime};
 use crate::domain::user::User;
 use crate::domain::{user, HasId};
 use crate::AppResult;

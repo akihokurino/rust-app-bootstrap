@@ -1,5 +1,5 @@
-use app::model;
-use app::model::time::ParseFromRfc3339;
+use app::domain::types;
+use app::domain::types::time::ParseFromRfc3339;
 use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, SimpleObject};
 use async_graphql_value::ConstValue;
 use derive_more::{From, Into};
@@ -15,12 +15,12 @@ impl From<bool> for BoolPayload {
 }
 
 #[derive(Clone, Debug, From, Into)]
-pub struct Date(pub model::time::Date);
+pub struct Date(pub types::time::Date);
 #[Scalar]
 impl ScalarType for Date {
     fn parse(value: ConstValue) -> InputValueResult<Self> {
         if let ConstValue::String(v) = value {
-            Ok(Self(model::time::Date::parse_from_rfc3339(&v)?))
+            Ok(Self(types::time::Date::parse_from_rfc3339(&v)?))
         } else {
             Err(InputValueError::expected_type(value))
         }
@@ -32,12 +32,12 @@ impl ScalarType for Date {
 }
 
 #[derive(Clone, Debug, From, Into)]
-pub struct DateTime(pub model::time::LocalDateTime);
+pub struct DateTime(pub types::time::LocalDateTime);
 #[Scalar]
 impl ScalarType for DateTime {
     fn parse(value: ConstValue) -> InputValueResult<Self> {
         if let ConstValue::String(v) = value {
-            Ok(Self(model::time::LocalDateTime::parse_from_rfc3339(&v)?))
+            Ok(Self(types::time::LocalDateTime::parse_from_rfc3339(&v)?))
         } else {
             Err(InputValueError::expected_type(value))
         }

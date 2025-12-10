@@ -1,7 +1,7 @@
 use crate::adapter::DbConn;
 use crate::domain::order::Order;
-use crate::model::string::impl_len_restricted_string_model;
-use crate::model::time::{now, LocalDateTime};
+use crate::domain::types::string::impl_len_restricted_string_model;
+use crate::domain::types::time::{now, LocalDateTime};
 use crate::domain::{order, HasId};
 use crate::AppResult;
 use async_trait::async_trait;
