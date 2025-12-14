@@ -1,3 +1,4 @@
+pub mod admin;
 mod data_loader;
 mod errors;
 pub mod service;

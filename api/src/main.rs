@@ -19,7 +19,8 @@ async fn main() -> std::io::Result<()> {
 
     app::init_log();
 
-    let api_http_handler = graphql::service::HttpHandler::new().await;
+    let user_api_handler = graphql::service::HttpHandler::new(app.clone()).await;
+    let admin_api_handler = graphql::admin::HttpHandler::new(app.clone()).await;
     let port = app.env.port.clone();
 
     let app_factory = move || {
@@ -32,18 +33,30 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600)
                     .supports_credentials(),
             )
-            .app_data(Data::new(api_http_handler.clone()))
+            .app_data(Data::new(user_api_handler.clone()))
+            .app_data(Data::new(admin_api_handler.clone()))
             .service(
                 web::resource("/api/graphql")
                     .guard(guard::Post())
-                    .to(api_graphql_route),
+                    .to(user_api_graphql_route),
+            )
+            .service(
+                web::resource("/api/admin/graphql")
+                    .guard(guard::Post())
+                    .to(admin_api_graphql_route),
             );
 
-        app = app.service(
-            web::resource("/api/playground")
-                .guard(guard::Get())
-                .to(|| async { handle_playground("api") }),
-        );
+        let playground_paths = vec!["/api", "/api/admin"];
+        for path in playground_paths {
+            app = app.service(
+                web::resource(format!("{}/playground", path))
+                    .guard(guard::Get())
+                    .to(move || async {
+                        let path = path.to_string();
+                        handle_playground(format!("{}/graphql", path).as_str())
+                    }),
+            );
+        }
 
         app
     };
@@ -62,7 +75,7 @@ async fn main() -> std::io::Result<()> {
     }
 }
 
-async fn api_graphql_route(
+async fn user_api_graphql_route(
     handler: Data<graphql::service::HttpHandler>,
     http_req: HttpRequest,
     gql_req: GraphQLRequest,
@@ -70,8 +83,15 @@ async fn api_graphql_route(
     handler.handle(http_req, gql_req).await
 }
 
-fn handle_playground(schema_name: &'static str) -> actix_web::Result<HttpResponse> {
-    let path = format!("/{}/graphql", schema_name);
+async fn admin_api_graphql_route(
+    handler: Data<graphql::admin::HttpHandler>,
+    http_req: HttpRequest,
+    gql_req: GraphQLRequest,
+) -> GraphQLResponse {
+    handler.handle(http_req, gql_req).await
+}
+
+fn handle_playground(path: &str) -> actix_web::Result<HttpResponse> {
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(my_playground_source(GraphQLPlaygroundConfig::new(&path))))

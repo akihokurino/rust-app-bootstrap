@@ -28,6 +28,10 @@ Parameters:
     Type: String
     Default: 'sqs'
     Description: 'Name of the SQS stack'
+  CognitoStackName:
+    Type: String
+    Default: 'cognito'
+    Description: 'Name of the Cognito stack'
 
 Globals:
   Function:
