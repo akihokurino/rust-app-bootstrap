@@ -1,5 +1,5 @@
 [package]
-name = "async_task"
+name = "async_sns_fn"
 version = "0.1.0"
 edition = "2024"
 

@@ -11,7 +11,7 @@ endif
 
 BIN_OUTPUT_DIR := target/x86_64-unknown-linux-musl/release
 SRC_FILES := $(shell find . -type f | grep -v '^\./target' | grep -v '/\.')
-DEPLOY_CRATES := api async_task sync_task batch_task
+DEPLOY_CRATES := api async_sns_fn sync_fn batch_fn
 
 $(BIN_OUTPUT_DIR)/%: $(SRC_FILES)
 	$(DOCKER_CMD_BASE) cargo build --release --bin $(lastword $(subst /, ,$@)) --target x86_64-unknown-linux-musl
@@ -20,13 +20,13 @@ $(BIN_OUTPUT_DIR)/%: $(SRC_FILES)
 build-ApiFunction: $(BIN_OUTPUT_DIR)/api
 	cp $< $(ARTIFACTS_DIR)/bootstrap
 
-build-AsyncTaskFunction: $(BIN_OUTPUT_DIR)/async_task
+build-AsyncSnsFunction: $(BIN_OUTPUT_DIR)/async_sns_fn
 	cp $< $(ARTIFACTS_DIR)/bootstrap
 
-build-SyncTaskFunction: $(BIN_OUTPUT_DIR)/sync_task
+build-SyncFunction: $(BIN_OUTPUT_DIR)/sync_fn
 	cp $< $(ARTIFACTS_DIR)/bootstrap
 
-build-BatchTaskFunction: $(BIN_OUTPUT_DIR)/batch_task
+build-BatchFunction: $(BIN_OUTPUT_DIR)/batch_fn
 	cp $< $(ARTIFACTS_DIR)/bootstrap
 
 .PHONY: build

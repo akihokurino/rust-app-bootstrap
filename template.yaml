@@ -85,7 +85,7 @@ Resources:
       BinaryMediaTypes:
         - "*/*"
 
-  AsyncTaskFunction:
+  AsyncSnsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
@@ -110,7 +110,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
-  SyncTaskFunction:
+  SyncFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
@@ -127,7 +127,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
-  BatchTaskFunction:
+  BatchFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
@@ -161,15 +161,15 @@ Outputs:
     Description: 'API Function ARN'
     Value: !GetAtt ApiFunction.Arn
 
-  AsyncTaskFunctionArn:
-    Description: 'Async Task Function ARN'
-    Value: !GetAtt AsyncTaskFunction.Arn
+  AsyncSnsFunctionArn:
+    Description: 'Async SNS Function ARN'
+    Value: !GetAtt AsyncSnsFunction.Arn
 
-  SyncTaskFunctionArn:
-    Description: 'Sync Task Function ARN'
-    Value: !GetAtt SyncTaskFunction.Arn
+  SyncFunctionArn:
+    Description: 'Sync Function ARN'
+    Value: !GetAtt SyncFunction.Arn
 
-  BatchTaskFunctionArn:
-    Description: 'Batch Task Function ARN'
-    Value: !GetAtt BatchTaskFunction.Arn
+  BatchFunctionArn:
+    Description: 'Batch Function ARN'
+    Value: !GetAtt BatchFunction.Arn
 

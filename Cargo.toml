@@ -3,8 +3,8 @@ resolver = "3"
 members = [
     "migration",
     "api",
-    "async_task",
-    "batch_task",
+    "async_sns_fn",
+    "batch_fn",
     "app",
-    "sync_task",
+    "sync_fn",
 ]
