@@ -1,3 +1,4 @@
+use google_identitytoolkit3::oauth2;
 use std::str::FromStr;
 
 fn must_env(k: &str) -> String {
@@ -15,9 +16,20 @@ pub struct Env {
     pub sqs_async_task_queue_url: String,
     pub sync_task_lambda_arn: String,
     pub cognito_admin_user_pool_id: String,
+    pub google_project_id: String,
+    pub google_application_credentials: Option<oauth2::ServiceAccountKey>,
 }
 impl Env {
     pub fn new() -> Self {
+        let google_service_account =
+            if let Some(cred) = std::env::var("GOOGLE_APPLICATION_CREDENTIALS_BODY").ok() {
+                let parsed: Option<oauth2::ServiceAccountKey> =
+                    serde_json::from_str(cred.as_str()).ok();
+                parsed
+            } else {
+                None
+            };
+
         Env {
             env: must_env("ENV"),
             port: std::env::var("PORT").unwrap_or("8080".to_string()),
@@ -35,6 +47,8 @@ impl Env {
             sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
             cognito_admin_user_pool_id: std::env::var("COGNITO_ADMIN_USER_POOL_ID")
                 .expect("failed to parse COGNITO_ADMIN_USER_POOL_ID"),
+            google_project_id: must_env("GOOGLE_PROJECT_ID"),
+            google_application_credentials: google_service_account,
         }
     }
 

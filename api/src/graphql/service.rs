@@ -7,6 +7,7 @@ use crate::graphql::service::query::QueryRoot;
 use crate::graphql::{data_loader, GraphResult};
 use actix_web::http::header::{HeaderMap, HeaderValue};
 use actix_web::HttpRequest;
+use app::adapter::UserAuth;
 use app::domain;
 use app::errors::AppError;
 use app::errors::Kind::BadRequest;
@@ -15,6 +16,7 @@ use app::AppResult;
 use async_graphql::{Context, EmptySubscription};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;
+use std::sync::Arc;
 
 type AuthorizedUserId = domain::user::Id;
 
@@ -41,6 +43,7 @@ pub type Schema = async_graphql::Schema<QueryRoot, MutationRoot, EmptySubscripti
 #[derive(Clone)]
 pub struct HttpHandler {
     schema: Schema,
+    user_auth: Arc<dyn UserAuth>,
 }
 
 impl HttpHandler {
@@ -55,7 +58,10 @@ impl HttpHandler {
         .data(data_loader::order::new_loader(app.clone()))
         .finish();
 
-        HttpHandler { schema }
+        HttpHandler {
+            schema,
+            user_auth: app.user_auth,
+        }
     }
 
     pub async fn handle(&self, http_req: HttpRequest, gql_req: GraphQLRequest) -> GraphQLResponse {
@@ -64,7 +70,7 @@ impl HttpHandler {
         let headers: HeaderMap = HeaderMap::from_iter(http_req.headers().clone().into_iter());
         gql_req = gql_req.data(match headers.get("authorization") {
             None => Err(Unauthorized.into()),
-            Some(hv) => verify_token(hv).await,
+            Some(hv) => verify_token(&*self.user_auth, hv).await,
         });
 
         if let Some(hv) = headers.get("x-debug-user-id") {
@@ -77,14 +83,13 @@ impl HttpHandler {
     }
 }
 
-async fn verify_token(hv: &HeaderValue) -> AppResult<AuthorizedUserId> {
-    let _token_str = hv
+async fn verify_token(auth: &dyn UserAuth, hv: &HeaderValue) -> AppResult<AuthorizedUserId> {
+    let token_str = hv
         .to_str()
         .map_err(BadRequest.from_srcf())?
         .strip_prefix("Bearer ")
         .ok_or_else(|| BadRequest.with("invalid authorization header"))?;
 
-    // TODO : Implement token verification logic
-    let auth_id: Option<AuthorizedUserId> = None;
-    auth_id.map_or(Err(BadRequest.with("invalid token")), |v| Ok(v))
+    let uid = auth.verify(token_str).await?;
+    Ok(uid)
 }
