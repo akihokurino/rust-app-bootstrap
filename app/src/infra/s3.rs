@@ -2,7 +2,7 @@ mod errors;
 pub mod types;
 
 use crate::adapter::Storage;
-use crate::domain::types::s3_key::S3Key;
+use crate::domain::types::asset_key::AssetKey;
 use crate::errors::Kind::*;
 use crate::infra::s3::types::HeadObjectResponse;
 use crate::AppResult;
@@ -31,7 +31,7 @@ impl Adapter {
 
 #[async_trait]
 impl Storage for Adapter {
-    async fn presign_for_upload(&self, key: &S3Key) -> AppResult<Uri> {
+    async fn presign_for_upload(&self, key: &AssetKey) -> AppResult<Uri> {
         let expires_in = Duration::from_secs(60 * 60);
         let pre_signed = self
             .client
@@ -47,7 +47,7 @@ impl Storage for Adapter {
             .map_err(Internal.from_srcf())?)
     }
 
-    async fn presign_for_get(&self, key: &S3Key) -> AppResult<Uri> {
+    async fn presign_for_get(&self, key: &AssetKey) -> AppResult<Uri> {
         let expires_in = Duration::from_secs(60 * 60);
         let pre_signed = self
             .client
@@ -63,7 +63,7 @@ impl Storage for Adapter {
             .map_err(Internal.from_srcf())?)
     }
 
-    async fn download_object(&self, key: &S3Key) -> AppResult<Bytes> {
+    async fn download_object(&self, key: &AssetKey) -> AppResult<Bytes> {
         let resp = self
             .client
             .get_object()
@@ -75,7 +75,7 @@ impl Storage for Adapter {
         Ok(data.unwrap().into_bytes())
     }
 
-    async fn head_object(&self, key: &S3Key) -> AppResult<HeadObjectResponse> {
+    async fn head_object(&self, key: &AssetKey) -> AppResult<HeadObjectResponse> {
         let res = self
             .client
             .head_object()
@@ -97,7 +97,7 @@ impl Storage for Adapter {
         })
     }
 
-    async fn copy_object(&self, src_key: &S3Key, dest_key: &S3Key) -> AppResult<()> {
+    async fn copy_object(&self, src_key: &AssetKey, dest_key: &AssetKey) -> AppResult<()> {
         let res = self
             .client
             .copy_object()
