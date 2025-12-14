@@ -11,6 +11,7 @@ use crate::domain::types::email::Email;
 pub use crate::infra::rdb::session_manager::TransactionGuard;
 pub use crate::infra::s3::types::HeadObjectResponse;
 pub use sea_orm::DatabaseConnection;
+use serde::Serialize;
 
 #[async_trait]
 pub trait Storage: Send + Sync {
@@ -146,14 +147,35 @@ impl sea_orm::ConnectionTrait for DbConn<'_> {
 
 #[async_trait]
 pub trait UserAuth: Send + Sync {
-    async fn delete(&self, user_id: &domain::user::Id) -> AppResult<()>;
     async fn verify(&self, token: &str) -> AppResult<domain::user::Id>;
+    async fn get(&self, id: &domain::user::Id) -> AppResult<UserPrincipal>;
+    async fn delete(&self, id: &domain::user::Id) -> AppResult<()>;
+}
+#[derive(Debug, Clone, Default, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct UserPrincipal {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uid: Option<String>,
+    pub email: Option<String>,
+    pub provider_ids: Vec<String>,
+    pub last_login_at: Option<i64>,
+}
+impl UserPrincipal {
+    pub fn has_any_id(&self) -> bool {
+        self.uid.is_some()
+    }
+
+    pub fn user_id(&self) -> Option<domain::user::Id> {
+        self.uid
+            .as_ref()
+            .map(|v| domain::user::Id::from(v.as_str()))
+    }
 }
 
 #[async_trait]
 pub trait AdminAuth: Send + Sync {
-    async fn get(&self, id: &str) -> AppResult<admin_user::User>;
-    async fn create(&self, id: String, email: Email) -> AppResult<admin_user::User>;
-    async fn delete(&self, id: &str) -> AppResult<()>;
-    async fn verify(&self, token_str: &str) -> AppResult<admin_user::User>;
+    async fn verify(&self, token: &str) -> AppResult<admin_user::User>;
+    async fn get(&self, id: &admin_user::Id) -> AppResult<admin_user::User>;
+    async fn create(&self, id: admin_user::Id, email: Email) -> AppResult<()>;
+    async fn delete(&self, id: &admin_user::Id) -> AppResult<()>;
 }

@@ -1,8 +1,11 @@
-use crate::adapter::UserAuth;
+use crate::adapter::{UserAuth, UserPrincipal};
 use crate::errors::Kind::{BadRequest, Internal, NotFound};
 use crate::{domain, AppResult};
 use async_graphql::async_trait::async_trait;
-use google_identitytoolkit3::api::IdentitytoolkitRelyingpartyDeleteAccountRequest;
+use google_identitytoolkit3::api::{
+    IdentitytoolkitRelyingpartyDeleteAccountRequest,
+    IdentitytoolkitRelyingpartyGetAccountInfoRequest,
+};
 use google_identitytoolkit3::{hyper, hyper_rustls};
 use jsonwebtoken::{DecodingKey, Validation};
 use serde::Deserialize;
@@ -41,22 +44,6 @@ impl Adapter {
 
 #[async_trait]
 impl UserAuth for Adapter {
-    async fn delete(&self, user_id: &domain::user::Id) -> AppResult<()> {
-        self.identity_toolkit
-            .relyingparty()
-            .delete_account(IdentitytoolkitRelyingpartyDeleteAccountRequest {
-                local_id: Some(user_id.as_str().to_string()),
-                ..Default::default()
-            })
-            .doit()
-            .await
-            .map_err(|v| match v {
-                google_identitytoolkit3::Error::BadRequest(_) => NotFound.default(),
-                _ => Internal.from_src(v),
-            })?;
-        Ok(())
-    }
-
     async fn verify(&self, token: &str) -> AppResult<domain::user::Id> {
         let token_header = jsonwebtoken::decode_header(token).map_err(BadRequest.from_srcf())?;
 
@@ -88,6 +75,57 @@ impl UserAuth for Adapter {
         .map_err(BadRequest.from_srcf())?;
 
         Ok(token.claims.sub.into())
+    }
+
+    async fn get(&self, id: &domain::user::Id) -> AppResult<UserPrincipal> {
+        let mut request = IdentitytoolkitRelyingpartyGetAccountInfoRequest::default();
+        request.local_id = Some(vec![id.as_str().to_string()]);
+
+        let result = self
+            .identity_toolkit
+            .relyingparty()
+            .get_account_info(request)
+            .doit()
+            .await
+            .map_err(Internal.from_srcf())?;
+        if let Some(users) = result.1.users {
+            if users.is_empty() {
+                return Err(NotFound.with("user not found"));
+            }
+            let user = users.first().unwrap();
+            Ok(UserPrincipal {
+                uid: Some(user.local_id.clone().unwrap()),
+                email: user.clone().email.map(|v| v.clone()),
+                provider_ids: user
+                    .provider_user_info
+                    .clone()
+                    .map(|v| {
+                        v.into_iter()
+                            .filter_map(|v| v.provider_id)
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default(),
+                last_login_at: user.last_login_at.clone(),
+            })
+        } else {
+            Err(NotFound.with("user not found"))
+        }
+    }
+
+    async fn delete(&self, id: &domain::user::Id) -> AppResult<()> {
+        self.identity_toolkit
+            .relyingparty()
+            .delete_account(IdentitytoolkitRelyingpartyDeleteAccountRequest {
+                local_id: Some(id.as_str().to_string()),
+                ..Default::default()
+            })
+            .doit()
+            .await
+            .map_err(|v| match v {
+                google_identitytoolkit3::Error::BadRequest(_) => NotFound.default(),
+                _ => Internal.from_src(v),
+            })?;
+        Ok(())
     }
 }
 

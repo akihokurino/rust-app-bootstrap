@@ -41,68 +41,8 @@ impl Adapter {
 
 #[async_trait]
 impl AdminAuth for Adapter {
-    async fn get(&self, id: &str) -> AppResult<admin_user::User> {
-        let response = self
-            .client
-            .admin_get_user()
-            .user_pool_id(self.user_pool_id.clone())
-            .username(id)
-            .send()
-            .await?;
-
-        let username = response.username().to_string();
-        let attrs = response.user_attributes.unwrap_or_default();
-        let mut email: Option<String> = None;
-        for attr in attrs {
-            if attr.name == "email" {
-                email = attr.value;
-            }
-        }
-
-        Ok(admin_user::User {
-            id: username.into(),
-            email: email
-                .ok_or_else(|| Internal.with("email missing"))?
-                .try_into()
-                .map_err(Internal.withf())?,
-        })
-    }
-
-    async fn create(&self, id: String, email: Email) -> AppResult<admin_user::User> {
-        let email_str: String = email.clone().into();
-        self.client
-            .admin_create_user()
-            .user_pool_id(self.user_pool_id.clone())
-            .username(&id)
-            .set_user_attributes(Some(
-                [("email", email_str), ("email_verified", "true".to_string())]
-                    .map(|(k, v)| AttributeType::builder().name(k).value(v).build().unwrap())
-                    .to_vec(),
-            ))
-            .send()
-            .await
-            .map_err(Internal.from_srcf())?;
-
-        Ok(admin_user::User {
-            id: id.into(),
-            email,
-        })
-    }
-
-    async fn delete(&self, id: &str) -> AppResult<()> {
-        self.client
-            .admin_delete_user()
-            .user_pool_id(self.user_pool_id.clone())
-            .username(id)
-            .send()
-            .await
-            .map_err(Internal.from_srcf())?;
-        Ok(())
-    }
-
-    async fn verify(&self, token_str: &str) -> AppResult<admin_user::User> {
-        let token_header =
-            jsonwebtoken::decode_header(token_str).map_err(BadRequest.from_srcf())?;
+    async fn verify(&self, token: &str) -> AppResult<admin_user::User> {
+        let token_header = jsonwebtoken::decode_header(token).map_err(BadRequest.from_srcf())?;
 
         let kid = token_header
             .kid
@@ -125,7 +65,7 @@ impl AdminAuth for Adapter {
         validation.validate_aud = false;
 
         let claims = jsonwebtoken::decode::<Claims>(
-            token_str,
+            token,
             &DecodingKey::from_rsa_components(&jwk.n, &jwk.e).map_err(BadRequest.from_srcf())?,
             &validation,
         )
@@ -143,6 +83,62 @@ impl AdminAuth for Adapter {
             id: username.into(),
             email: email.try_into().map_err(BadRequest.withf())?,
         })
+    }
+
+    async fn get(&self, id: &admin_user::Id) -> AppResult<admin_user::User> {
+        let response = self
+            .client
+            .admin_get_user()
+            .user_pool_id(self.user_pool_id.clone())
+            .username(id.as_str().to_string())
+            .send()
+            .await?;
+
+        let username = response.username().to_string();
+        let attrs = response.user_attributes.unwrap_or_default();
+        let mut email: Option<String> = None;
+        for attr in attrs {
+            if attr.name == "email" {
+                email = attr.value;
+            }
+        }
+
+        Ok(admin_user::User {
+            id: username.into(),
+            email: email
+                .ok_or_else(|| Internal.with("email missing"))?
+                .try_into()
+                .map_err(Internal.withf())?,
+        })
+    }
+
+    async fn create(&self, id: admin_user::Id, email: Email) -> AppResult<()> {
+        let email_str: String = email.clone().into();
+        self.client
+            .admin_create_user()
+            .user_pool_id(self.user_pool_id.clone())
+            .username(id.as_str().to_string())
+            .set_user_attributes(Some(
+                [("email", email_str), ("email_verified", "true".to_string())]
+                    .map(|(k, v)| AttributeType::builder().name(k).value(v).build().unwrap())
+                    .to_vec(),
+            ))
+            .send()
+            .await
+            .map_err(Internal.from_srcf())?;
+
+        Ok(())
+    }
+
+    async fn delete(&self, id: &admin_user::Id) -> AppResult<()> {
+        self.client
+            .admin_delete_user()
+            .user_pool_id(self.user_pool_id.clone())
+            .username(id.as_str().to_string())
+            .send()
+            .await
+            .map_err(Internal.from_srcf())?;
+        Ok(())
     }
 }
 
