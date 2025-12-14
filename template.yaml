@@ -52,6 +52,8 @@ Globals:
           Fn::ImportValue: !Sub '${SNSStackName}-AsyncTaskTopicArn'
         SQS_ASYNC_TASK_QUEUE_URL:
           Fn::ImportValue: !Sub '${SQSStackName}-AsyncTaskQueueUrl'
+        COGNITO_ADMIN_USER_POOL_ID:
+          Fn::ImportValue: !Sub '${CognitoStackName}-CognitoAdminUserPoolId'
 
 Resources:
   ApiFunction:

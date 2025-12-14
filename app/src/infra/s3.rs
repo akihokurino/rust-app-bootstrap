@@ -2,7 +2,7 @@ mod errors;
 pub mod types;
 
 use crate::adapter::Storage;
-use crate::domain::S3Key;
+use crate::domain::types::s3_key::S3Key;
 use crate::errors::Kind::*;
 use crate::infra::s3::types::HeadObjectResponse;
 use crate::AppResult;

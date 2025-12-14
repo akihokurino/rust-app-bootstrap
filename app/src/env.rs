@@ -14,6 +14,7 @@ pub struct Env {
     pub sns_async_task_topic_arn: String,
     pub sqs_async_task_queue_url: String,
     pub sync_task_lambda_arn: String,
+    pub cognito_admin_user_pool_id: String,
 }
 impl Env {
     pub fn new() -> Self {
@@ -32,6 +33,8 @@ impl Env {
             sqs_async_task_queue_url: std::env::var("SQS_ASYNC_TASK_QUEUE_URL")
                 .expect("failed to parse SQS_ASYNC_TASK_QUEUE_URL"),
             sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
+            cognito_admin_user_pool_id: std::env::var("COGNITO_ADMIN_USER_POOL_ID")
+                .expect("failed to parse COGNITO_ADMIN_USER_POOL_ID"),
         }
     }
 

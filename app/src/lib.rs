@@ -1,8 +1,9 @@
-use crate::adapter::{DBSession, RemoteFunction, Storage, TaskQueue};
+use crate::adapter::{AdminAuth, DBSession, RemoteFunction, Storage, TaskQueue};
 use crate::domain::order::detail::OrderDetailRepository;
 use crate::domain::order::OrderRepository;
 use crate::domain::user::UserRepository;
 use crate::errors::AppError;
+use crate::infra::cognito;
 use aws_config::BehaviorVersion;
 use infra::rdb::{repository, session_manager};
 use infra::ssm;
@@ -20,9 +21,11 @@ mod infra;
 
 pub type AppResult<T> = Result<T, AppError>;
 
+#[derive(Clone)]
 pub struct App {
     pub env: env::Env,
     pub storage: Arc<dyn Storage>,
+    pub admin_auth: Arc<dyn AdminAuth>,
     pub sns_task_queue: Arc<dyn TaskQueue>,
     pub sqs_task_queue: Arc<dyn TaskQueue>,
     pub remote_function: Arc<dyn RemoteFunction>,
@@ -30,22 +33,6 @@ pub struct App {
     pub user_repository: Arc<dyn UserRepository>,
     pub order_repository: Arc<dyn OrderRepository>,
     pub order_detail_repository: Arc<dyn OrderDetailRepository>,
-}
-
-impl Clone for App {
-    fn clone(&self) -> Self {
-        Self {
-            env: self.env.clone(),
-            storage: Arc::clone(&self.storage),
-            sns_task_queue: Arc::clone(&self.sns_task_queue),
-            sqs_task_queue: Arc::clone(&self.sqs_task_queue),
-            remote_function: Arc::clone(&self.remote_function),
-            db_session: Arc::clone(&self.db_session),
-            user_repository: Arc::clone(&self.user_repository),
-            order_repository: Arc::clone(&self.order_repository),
-            order_detail_repository: Arc::clone(&self.order_detail_repository),
-        }
-    }
 }
 
 impl std::fmt::Debug for App {
@@ -81,6 +68,11 @@ pub async fn app() -> AppResult<&'static App> {
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
     ));
+    let admin_auth: Arc<dyn AdminAuth> = Arc::new(cognito::Adapter::new(
+        aws_sdk_cognitoidentityprovider::Client::new(&aws_config),
+        envs.cognito_admin_user_pool_id.clone(),
+    ));
+
     let sns_task_queue: Arc<dyn TaskQueue> =
         Arc::new(sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config)));
     let sqs_task_queue: Arc<dyn TaskQueue> =
@@ -99,6 +91,7 @@ pub async fn app() -> AppResult<&'static App> {
     let app = App {
         env: envs,
         storage,
+        admin_auth,
         sns_task_queue,
         sqs_task_queue,
         remote_function,

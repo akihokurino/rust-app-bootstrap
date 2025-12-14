@@ -1,3 +1,4 @@
+pub mod cognito;
 pub mod lambda;
 pub mod log;
 pub mod rdb;

@@ -2,13 +2,10 @@ pub mod order;
 pub mod types;
 pub mod user;
 
-use derive_more::{AsRef, Display, Into};
 use rand::random;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use types::string::{impl_len_restricted_string_model, FromUnchecked};
 
 pub trait HasId<T = Self>: Sized {
     fn id(&self) -> &Id<T>;
@@ -86,35 +83,5 @@ where
             map.insert(item.id().clone(), item);
         }
         map
-    }
-}
-
-impl_len_restricted_string_model!(S3Key, "S3キー", 1, 255);
-impl S3Key {
-    pub fn asset_key(user_id: user::Id, file_name: String) -> Self {
-        Self(format!("asset/{}/{}", user_id.as_str(), file_name))
-    }
-    pub fn temp_key(user_id: user::Id, file_name: String) -> Self {
-        Self(format!("tmp/{}/{}", user_id.as_str(), file_name))
-    }
-}
-
-#[derive(
-    Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, Into, Display, AsRef,
-)]
-pub struct Email(String);
-impl TryFrom<String> for Email {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if !email_address::EmailAddress::is_valid(&value) {
-            return Err("不正なメールアドレスです".into());
-        }
-        Ok(Email(value))
-    }
-}
-impl FromUnchecked<String> for Email {
-    fn from_unchecked(value: String) -> Self {
-        Self(value)
     }
 }

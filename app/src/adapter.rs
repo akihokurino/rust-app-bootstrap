@@ -3,9 +3,11 @@ use bytes::Bytes;
 use http::Uri;
 use std::future::Future;
 
-use crate::domain::S3Key;
 use crate::AppResult;
 
+use crate::domain::types::email::Email;
+use crate::domain::types::s3_key::S3Key;
+pub use crate::infra::cognito::Claims as AdminClaims;
 pub use crate::infra::rdb::session_manager::TransactionGuard;
 pub use crate::infra::s3::types::HeadObjectResponse;
 pub use sea_orm::DatabaseConnection;
@@ -140,4 +142,13 @@ impl sea_orm::ConnectionTrait for DbConn<'_> {
             DbConn::Tx(tx) => tx.support_returning(),
         }
     }
+}
+
+#[async_trait]
+pub trait AdminAuth: Send + Sync {
+    async fn get_by_email(&self, email: Email) -> AppResult<String>;
+    async fn get_email(&self, id: &str) -> AppResult<String>;
+    async fn create(&self, id: String, email: Email) -> AppResult<String>;
+    async fn delete(&self, id: &str) -> AppResult<()>;
+    async fn verify(&self, token_str: &str) -> AppResult<AdminClaims>;
 }
