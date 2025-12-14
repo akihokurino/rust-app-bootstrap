@@ -3,11 +3,11 @@ use bytes::Bytes;
 use http::Uri;
 use std::future::Future;
 
-use crate::AppResult;
+use crate::{domain, AppResult};
 
+use crate::domain::admin_user;
 use crate::domain::types::email::Email;
 use crate::domain::types::s3_key::S3Key;
-pub use crate::infra::cognito::Claims as AdminClaims;
 pub use crate::infra::rdb::session_manager::TransactionGuard;
 pub use crate::infra::s3::types::HeadObjectResponse;
 pub use sea_orm::DatabaseConnection;
@@ -145,10 +145,15 @@ impl sea_orm::ConnectionTrait for DbConn<'_> {
 }
 
 #[async_trait]
+pub trait UserAuth: Send + Sync {
+    async fn delete(&self, user_id: &domain::user::Id) -> AppResult<()>;
+    async fn verify(&self, token: &str) -> AppResult<domain::user::Id>;
+}
+
+#[async_trait]
 pub trait AdminAuth: Send + Sync {
-    async fn get_by_email(&self, email: Email) -> AppResult<String>;
-    async fn get_email(&self, id: &str) -> AppResult<String>;
-    async fn create(&self, id: String, email: Email) -> AppResult<String>;
+    async fn get(&self, id: &str) -> AppResult<admin_user::User>;
+    async fn create(&self, id: String, email: Email) -> AppResult<admin_user::User>;
     async fn delete(&self, id: &str) -> AppResult<()>;
-    async fn verify(&self, token_str: &str) -> AppResult<AdminClaims>;
+    async fn verify(&self, token_str: &str) -> AppResult<admin_user::User>;
 }

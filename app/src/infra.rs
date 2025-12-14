@@ -1,4 +1,5 @@
 pub mod cognito;
+pub mod firebase;
 pub mod lambda;
 pub mod log;
 pub mod rdb;

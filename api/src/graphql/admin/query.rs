@@ -11,6 +11,6 @@ pub struct DefaultQuery;
 impl DefaultQuery {
     async fn me(&self, ctx: &Context<'_>) -> GraphResult<String> {
         let uid = ctx.verified_user_id()?;
-        Ok(uid)
+        Ok(uid.into())
     }
 }

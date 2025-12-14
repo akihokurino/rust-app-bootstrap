@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::adapter::AdminAuth;
+use crate::domain::admin_user;
 use crate::domain::types::email::Email;
 use crate::errors::Kind::*;
 use crate::AppResult;
@@ -40,19 +41,7 @@ impl Adapter {
 
 #[async_trait]
 impl AdminAuth for Adapter {
-    async fn get_by_email(&self, email: Email) -> AppResult<String> {
-        let output = self
-            .client
-            .admin_get_user()
-            .user_pool_id(self.user_pool_id.clone())
-            .username(email)
-            .send()
-            .await?;
-
-        Ok(output.username().to_string())
-    }
-
-    async fn get_email(&self, id: &str) -> AppResult<String> {
+    async fn get(&self, id: &str) -> AppResult<admin_user::User> {
         let response = self
             .client
             .admin_get_user()
@@ -61,34 +50,43 @@ impl AdminAuth for Adapter {
             .send()
             .await?;
 
-        let attrs = response.user_attributes.unwrap();
-        let mut email: String = "".to_string();
+        let username = response.username().to_string();
+        let attrs = response.user_attributes.unwrap_or_default();
+        let mut email: Option<String> = None;
         for attr in attrs {
             if attr.name == "email" {
-                email = attr.value.ok_or_else(|| Internal.with("email missing"))?
+                email = attr.value;
             }
         }
 
-        Ok(email)
+        Ok(admin_user::User {
+            id: username.into(),
+            email: email
+                .ok_or_else(|| Internal.with("email missing"))?
+                .try_into()
+                .map_err(Internal.withf())?,
+        })
     }
 
-    async fn create(&self, id: String, email: Email) -> AppResult<String> {
+    async fn create(&self, id: String, email: Email) -> AppResult<admin_user::User> {
+        let email_str: String = email.clone().into();
         self.client
             .admin_create_user()
             .user_pool_id(self.user_pool_id.clone())
-            .username(id)
+            .username(&id)
             .set_user_attributes(Some(
-                [
-                    ("email", email.into()),
-                    ("email_verified", "true".to_string()),
-                ]
-                .map(|(k, v)| AttributeType::builder().name(k).value(v).build().unwrap())
-                .to_vec(),
+                [("email", email_str), ("email_verified", "true".to_string())]
+                    .map(|(k, v)| AttributeType::builder().name(k).value(v).build().unwrap())
+                    .to_vec(),
             ))
             .send()
             .await
-            .map(|v| v.user().unwrap().username().unwrap().to_string())
-            .map_err(Internal.from_srcf())
+            .map_err(Internal.from_srcf())?;
+
+        Ok(admin_user::User {
+            id: id.into(),
+            email,
+        })
     }
 
     async fn delete(&self, id: &str) -> AppResult<()> {
@@ -102,7 +100,7 @@ impl AdminAuth for Adapter {
         Ok(())
     }
 
-    async fn verify(&self, token_str: &str) -> AppResult<Claims> {
+    async fn verify(&self, token_str: &str) -> AppResult<admin_user::User> {
         let token_header =
             jsonwebtoken::decode_header(token_str).map_err(BadRequest.from_srcf())?;
 
@@ -126,13 +124,25 @@ impl AdminAuth for Adapter {
         let mut validation = Validation::new(jsonwebtoken::Algorithm::RS256);
         validation.validate_aud = false;
 
-        jsonwebtoken::decode::<Claims>(
+        let claims = jsonwebtoken::decode::<Claims>(
             token_str,
             &DecodingKey::from_rsa_components(&jwk.n, &jwk.e).map_err(BadRequest.from_srcf())?,
             &validation,
         )
         .map_err(BadRequest.from_srcf())
-        .map(|v| v.claims)
+        .map(|v| v.claims)?;
+
+        let username = claims
+            .username()
+            .ok_or_else(|| BadRequest.with("username missing"))?;
+        let email = claims
+            .email()
+            .ok_or_else(|| BadRequest.with("email missing"))?;
+
+        Ok(admin_user::User {
+            id: username.into(),
+            email: email.try_into().map_err(BadRequest.withf())?,
+        })
     }
 }
 
@@ -168,7 +178,7 @@ struct KeyResponse {
 
 #[derive(Debug, Clone, Deserialize, Deref)]
 #[serde(rename_all = "camelCase")]
-pub struct Claims(serde_json::Map<String, Value>);
+struct Claims(serde_json::Map<String, Value>);
 impl Claims {
     pub fn username(&self) -> Option<String> {
         self.get_str_val("cognito:username")

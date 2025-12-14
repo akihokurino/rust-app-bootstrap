@@ -1,3 +1,4 @@
+pub mod admin_user;
 pub mod order;
 pub mod types;
 pub mod user;

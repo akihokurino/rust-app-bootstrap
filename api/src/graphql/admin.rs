@@ -8,13 +8,13 @@ use app::adapter::AdminAuth;
 use app::errors::AppError;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Unauthorized;
-use app::AppResult;
+use app::{domain, AppResult};
 use async_graphql::{Context, EmptyMutation, EmptySubscription};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;
 use std::sync::Arc;
 
-type AuthorizedUserId = String;
+type AuthorizedUserId = domain::admin_user::Id;
 
 #[async_trait]
 trait AppContext {
@@ -82,6 +82,6 @@ async fn verify_token(auth: &dyn AdminAuth, hv: &HeaderValue) -> AppResult<Autho
         .strip_prefix("Bearer ")
         .ok_or_else(|| BadRequest.with("invalid authorization header"))?;
 
-    let auth_id: Option<AuthorizedUserId> = auth.verify(token_str).await.map(|v| v.username())?;
-    auth_id.map_or(Err(BadRequest.with("invalid token")), |v| Ok(v))
+    let user = auth.verify(token_str).await?;
+    Ok(user.id.into())
 }
