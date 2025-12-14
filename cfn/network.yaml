@@ -241,6 +241,29 @@ Resources:
         - Key: Name
           Value: rds-sg
 
+  # Aurora用セキュリティグループ
+  AuroraSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Security group for Aurora PostgreSQL'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref BastionSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref CodeBuildSecurityGroup
+      Tags:
+        - Key: Name
+          Value: aurora-sg
+
   # SSM VPC Endpoint
   SSMVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -330,6 +353,12 @@ Outputs:
     Value: !Ref RDSSecurityGroup
     Export:
       Name: !Sub '${AWS::StackName}-RDSSecurityGroupId'
+
+  AuroraSecurityGroupId:
+    Description: 'Aurora Security Group ID'
+    Value: !Ref AuroraSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AuroraSecurityGroupId'
 
   BastionSecurityGroupId:
     Description: 'Bastion Security Group ID'

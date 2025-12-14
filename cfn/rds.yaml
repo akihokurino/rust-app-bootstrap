@@ -2,17 +2,15 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'RDS PostgreSQL for development environment'
 
 Parameters:
+  NetworkStackName:
+    Type: String
+    Default: 'network'
+    Description: 'Name of the network stack'
   DBPassword:
     Type: String
     Default: 'postgres'
     Description: 'Database password'
     NoEcho: true
-
-  NetworkStackName:
-    Type: String
-    Default: 'network'
-    Description: 'Name of the network stack'
-
   DeletionProtection:
     Type: String
     Default: 'false'
@@ -20,7 +18,6 @@ Parameters:
       - 'true'
       - 'false'
     Description: 'Enable deletion protection for the RDS instance'
-
   MultipleAZ:
     Type: String
     Default: 'false'
@@ -46,7 +43,7 @@ Resources:
   PostgreSQLDatabase:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: app
+      DBInstanceIdentifier: postgres-rds
       DBName: app
       DBInstanceClass: db.t3.micro
       Engine: postgres
