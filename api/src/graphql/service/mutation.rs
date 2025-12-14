@@ -44,10 +44,16 @@ impl DefaultMutation {
         let payload = app::domain::types::task::AsyncTaskPayload {
             name: "My Async Task".to_string(),
         };
-        app.task_queue
+        app.sns_task_queue
             .publish(
                 serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
                 app.env.sns_async_task_topic_arn.clone(),
+            )
+            .await?;
+        app.sqs_task_queue
+            .publish(
+                serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
+                app.env.sqs_async_task_queue_url.clone(),
             )
             .await?;
         Ok(true.into())

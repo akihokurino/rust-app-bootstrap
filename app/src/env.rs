@@ -12,6 +12,7 @@ pub struct Env {
     pub database_url: String,
     pub s3_bucket_name: String,
     pub sns_async_task_topic_arn: String,
+    pub sqs_async_task_queue_url: String,
     pub sync_task_lambda_arn: String,
 }
 impl Env {
@@ -28,6 +29,8 @@ impl Env {
                 .expect("failed to parse S3_BUCKET_NAME"),
             sns_async_task_topic_arn: std::env::var("SNS_ASYNC_TASK_TOPIC_ARN")
                 .expect("failed to parse SNS_ASYNC_TASK_TOPIC_ARN"),
+            sqs_async_task_queue_url: std::env::var("SQS_ASYNC_TASK_QUEUE_URL")
+                .expect("failed to parse SQS_ASYNC_TASK_QUEUE_URL"),
             sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
         }
     }

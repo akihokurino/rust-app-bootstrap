@@ -6,7 +6,7 @@ use crate::errors::AppError;
 use aws_config::BehaviorVersion;
 use infra::rdb::{repository, session_manager};
 use infra::ssm;
-use infra::{lambda, s3, sns};
+use infra::{lambda, s3, sns, sqs};
 #[allow(unused)]
 use once_cell;
 use std::sync::Arc;
@@ -23,7 +23,8 @@ pub type AppResult<T> = Result<T, AppError>;
 pub struct App {
     pub env: env::Env,
     pub storage: Arc<dyn Storage>,
-    pub task_queue: Arc<dyn TaskQueue>,
+    pub sns_task_queue: Arc<dyn TaskQueue>,
+    pub sqs_task_queue: Arc<dyn TaskQueue>,
     pub remote_function: Arc<dyn RemoteFunction>,
     pub db_session: Arc<dyn DBSession>,
     pub user_repository: Arc<dyn UserRepository>,
@@ -36,7 +37,8 @@ impl Clone for App {
         Self {
             env: self.env.clone(),
             storage: Arc::clone(&self.storage),
-            task_queue: Arc::clone(&self.task_queue),
+            sns_task_queue: Arc::clone(&self.sns_task_queue),
+            sqs_task_queue: Arc::clone(&self.sqs_task_queue),
             remote_function: Arc::clone(&self.remote_function),
             db_session: Arc::clone(&self.db_session),
             user_repository: Arc::clone(&self.user_repository),
@@ -79,8 +81,10 @@ pub async fn app() -> AppResult<&'static App> {
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
     ));
-    let task_queue: Arc<dyn TaskQueue> =
+    let sns_task_queue: Arc<dyn TaskQueue> =
         Arc::new(sns::Adapter::new(aws_sdk_sns::Client::new(&aws_config)));
+    let sqs_task_queue: Arc<dyn TaskQueue> =
+        Arc::new(sqs::Adapter::new(aws_sdk_sqs::Client::new(&aws_config)));
     let remote_function: Arc<dyn RemoteFunction> = Arc::new(lambda::Adapter::new(
         aws_sdk_lambda::Client::new(&aws_config),
     ));
@@ -95,7 +99,8 @@ pub async fn app() -> AppResult<&'static App> {
     let app = App {
         env: envs,
         storage,
-        task_queue,
+        sns_task_queue,
+        sqs_task_queue,
         remote_function,
         db_session,
         user_repository,

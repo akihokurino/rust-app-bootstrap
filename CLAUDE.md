@@ -10,6 +10,7 @@ This is a Rust-based AWS serverless application template with the following arch
   - `app`: Core application library with domain logic, infrastructure adapters, and shared types
   - `api`: GraphQL API server using Actix Web and async-graphql
   - `async_sns_fn`: Asynchronous task handler for SNS messages
+  - `async_sqs_fn`: Asynchronous task handler for SQS messages
   - `sync_fn`: Synchronous task handler
   - `batch_fn`: Batch processing task handler
   - `migration`: SeaORM database migrations

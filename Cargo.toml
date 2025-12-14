@@ -7,4 +7,5 @@ members = [
     "batch_fn",
     "app",
     "sync_fn",
+    "async_sqs_fn",
 ]

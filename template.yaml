@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Default: 'sns'
     Description: 'Name of the SNS stack'
+  SQSStackName:
+    Type: String
+    Default: 'sqs'
+    Description: 'Name of the SQS stack'
 
 Globals:
   Function:
@@ -46,6 +50,8 @@ Globals:
           Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
         SNS_ASYNC_TASK_TOPIC_ARN:
           Fn::ImportValue: !Sub '${SNSStackName}-AsyncTaskTopicArn'
+        SQS_ASYNC_TASK_QUEUE_URL:
+          Fn::ImportValue: !Sub '${SQSStackName}-AsyncTaskQueueUrl'
 
 Resources:
   ApiFunction:
@@ -99,6 +105,33 @@ Resources:
               Fn::ImportValue: !Sub '${SNSStackName}-AsyncTaskTopicArn'
       EventInvokeConfig:
         MaximumRetryAttempts: 0
+      Policies:
+        - VPCAccessPolicy: { }
+        - AmazonSSMReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AmazonS3FullAccess
+        - AmazonSNSFullAccess
+        - LambdaInvokePolicy:
+            FunctionName: "*"
+    Metadata:
+      BuildMethod: makefile
+
+  AsyncSqsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: bootstrap.is.real.handler
+      Runtime: provided.al2
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::ImportValue: !Sub '${SQSStackName}-AsyncTaskQueueArn'
+            BatchSize: 1
+            MaximumBatchingWindowInSeconds: 0
+            ScalingConfig:
+              MaximumConcurrency: 10
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
@@ -164,6 +197,10 @@ Outputs:
   AsyncSnsFunctionArn:
     Description: 'Async SNS Function ARN'
     Value: !GetAtt AsyncSnsFunction.Arn
+
+  AsyncSqsFunctionArn:
+    Description: 'Async SQS Function ARN'
+    Value: !GetAtt AsyncSqsFunction.Arn
 
   SyncFunctionArn:
     Description: 'Sync Function ARN'

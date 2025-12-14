@@ -2,21 +2,30 @@ use serde::{Deserialize, Serialize};
 
 // SNS event types for Lambda
 #[derive(Serialize, Deserialize)]
-pub struct EventData {
+pub struct SnsEventData {
     #[serde(rename = "Records")]
-    pub records: Vec<Record>,
+    pub records: Vec<SnsRecord>,
 }
-
 #[derive(Serialize, Deserialize)]
-pub struct Record {
+pub struct SnsRecord {
     #[serde(rename = "Sns")]
-    pub sns: Sns,
+    pub sns: SnsMessage,
 }
-
 #[derive(Serialize, Deserialize)]
-pub struct Sns {
+pub struct SnsMessage {
     #[serde(rename = "Message")]
     pub message: String,
+}
+
+// SQS event types for Lambda
+#[derive(Serialize, Deserialize)]
+pub struct SqsEventData {
+    #[serde(rename = "Records")]
+    pub records: Vec<SqsRecord>,
+}
+#[derive(Serialize, Deserialize)]
+pub struct SqsRecord {
+    pub body: String,
 }
 
 // Async task types

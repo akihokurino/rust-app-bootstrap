@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "SQS Queue for processing in the environment"
+
+Parameters:
+  DefaultVisibilityTimeout:
+    Type: Number
+    Default: 960
+    Description: "Lambda 15分 + バッファ1分"
+  DefaultMessageRetentionPeriod:
+    Type: Number
+    Default: 1209600
+    Description: "14日"
+  DefaultReceiveMessageWaitTimeSeconds:
+    Type: Number
+    Default: 20
+    Description: "Long polling"
+  DefaultMaxReceiveCount:
+    Type: Number
+    Default: 3
+
+Resources:
+  AsyncTaskQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "async-task-queue"
+      VisibilityTimeout: !Ref DefaultVisibilityTimeout
+      MessageRetentionPeriod: !Ref DefaultMessageRetentionPeriod
+      ReceiveMessageWaitTimeSeconds: !Ref DefaultReceiveMessageWaitTimeSeconds
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AsyncTaskDLQ.Arn
+        maxReceiveCount: !Ref DefaultMaxReceiveCount
+  AsyncTaskDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "async-task-queue-dlq"
+      MessageRetentionPeriod: !Ref DefaultMessageRetentionPeriod
+
+Outputs:
+  AsyncTaskQueueArn:
+    Value: !GetAtt AsyncTaskQueue.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-AsyncTaskQueueArn'
+  AsyncTaskQueueName:
+    Value: !GetAtt AsyncTaskQueue.QueueName
+    Export:
+      Name: !Sub '${AWS::StackName}-AsyncTaskQueueName'
+  AsyncTaskQueueUrl:
+    Value: !Ref AsyncTaskQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-AsyncTaskQueueUrl'

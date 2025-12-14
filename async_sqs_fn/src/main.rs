@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use app::domain::types::task::{AsyncTaskPayload, SnsEventData};
+use app::domain::types::task::{AsyncTaskPayload, SqsEventData};
 use app::errors::Kind::BadRequest;
 use app::AppResult;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
@@ -27,10 +27,10 @@ async fn exec(payload: Value) -> AppResult<()> {
         }
     };
 
-    let data: SnsEventData = serde_json::from_value(payload)
+    let data: SqsEventData = serde_json::from_value(payload)
         .map_err(|e| BadRequest.with("failed to parse payload").with_src(e))?;
     if let Some(record) = data.records.first() {
-        let task_payload: AsyncTaskPayload = serde_json::from_str(&record.sns.message)
+        let task_payload: AsyncTaskPayload = serde_json::from_str(&record.body)
             .map_err(|e| BadRequest.with("failed to parse message").with_src(e))?;
 
         println!("Task name: {}", task_payload.name);

@@ -376,6 +376,7 @@ dependencies = [
  "aws-sdk-lambda",
  "aws-sdk-s3",
  "aws-sdk-sns",
+ "aws-sdk-sqs",
  "aws-sdk-ssm",
  "base-62",
  "bytes",
@@ -552,6 +553,17 @@ dependencies = [
 
 [[package]]
 name = "async_sns_fn"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "app",
+ "lambda_runtime 0.14.2",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "async_sqs_fn"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -757,6 +769,28 @@ dependencies = [
  "aws-smithy-types",
  "aws-smithy-xml",
  "aws-types",
+ "fastrand",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
+name = "aws-sdk-sqs"
+version = "1.72.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7c66032c543428209106e3a104402289d9f18f77c7eb3de8f6e165256c42c38"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
  "fastrand",
  "http 0.2.12",
  "regex-lite",

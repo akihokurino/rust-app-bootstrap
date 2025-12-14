@@ -5,7 +5,7 @@ Resources:
   AsyncTaskTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: "async-task"
+      TopicName: "async-task-topic"
 
 Outputs:
   AsyncTaskTopicArn:
