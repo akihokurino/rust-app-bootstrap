@@ -8,10 +8,11 @@ ifeq ($(USE_DOCKER), 1)
 	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.87.0-stable
 endif
 
-
 BIN_OUTPUT_DIR := target/x86_64-unknown-linux-musl/release
 SRC_FILES := $(shell find . -type f | grep -v '^\./target' | grep -v '/\.')
 DEPLOY_CRATES := api async_sns_fn sync_fn batch_fn async_sqs_fn
+COGNITO_USER_POOL_ID :=ap-northeast-1_qyBWnc7Q7
+COGNITO_USER_NAME := admin-owner
 
 $(BIN_OUTPUT_DIR)/%: $(SRC_FILES)
 	$(DOCKER_CMD_BASE) cargo build --release --bin $(lastword $(subst /, ,$@)) --target x86_64-unknown-linux-musl
@@ -94,3 +95,26 @@ ssm-docker-config:
 	--name "/app/docker/config" \
 	--value file://.docker/config.json \
 	--type "SecureString"
+
+.PHONY: create-admin-user
+create-admin-user:
+	aws cognito-idp admin-create-user \
+		--user-pool-id $(COGNITO_USER_POOL_ID) \
+		--username $(COGNITO_USER_NAME) \
+		--temporary-password Test1234 \
+		--message-action SUPPRESS \
+		--user-attributes Name=email,Value=aki030402@gmail.com Name=email_verified,Value=true
+	aws cognito-idp admin-set-user-password \
+		--user-pool-id $(COGNITO_USER_POOL_ID) \
+		--username $(COGNITO_USER_NAME) \
+		--password Test1234 \
+		--permanent
+
+.PHONY: login-admin-user
+login-admin-user:
+	$(eval CLIENT_ID := $(shell aws cognito-idp list-user-pool-clients --user-pool-id $(COGNITO_USER_POOL_ID) --query 'UserPoolClients[0].ClientId' --output text))
+	aws cognito-idp admin-initiate-auth \
+		--user-pool-id $(COGNITO_USER_POOL_ID) \
+		--client-id $(CLIENT_ID) \
+		--auth-flow ADMIN_USER_PASSWORD_AUTH \
+		--auth-parameters USERNAME=$(COGNITO_USER_NAME),PASSWORD=Test1234
