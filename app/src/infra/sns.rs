@@ -17,11 +17,11 @@ impl Adapter {
 
 #[async_trait]
 impl TaskQueue for Adapter {
-    async fn publish(&self, input: serde_json::Value, arn: String) -> AppResult<()> {
+    async fn publish(&self, input: serde_json::Value, target: String) -> AppResult<()> {
         let json = serde_json::to_string(&input).map_err(Internal.from_srcf())?;
         self.client
             .publish()
-            .topic_arn(&arn)
+            .topic_arn(&target)
             .message(json)
             .send()
             .await

@@ -13,6 +13,7 @@ SRC_FILES := $(shell find . -type f | grep -v '^\./target' | grep -v '/\.')
 DEPLOY_CRATES := api async_sns_fn sync_fn batch_fn async_sqs_fn
 COGNITO_USER_POOL_ID :=ap-northeast-1_qyBWnc7Q7
 COGNITO_USER_NAME := admin-owner
+AWS_SSO_SESSION ?= dev
 
 $(BIN_OUTPUT_DIR)/%: $(SRC_FILES)
 	$(DOCKER_CMD_BASE) cargo build --release --bin $(lastword $(subst /, ,$@)) --target x86_64-unknown-linux-musl
@@ -41,17 +42,21 @@ deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 	sam build
 	sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
 
-.PHONY: run-api
-run-api:
+.PHONY: run-local-api
+run-local-api:
 	SSM_DOTENV_PARAMETER_NAME=/app/server/dotenv cargo run --bin api
 
-.PHONY: run-db
-run-db:
+.PHONY: run-local-db
+run-local-db:
 	docker-compose up db
+
+.PHONY: reset-local-db
+reset-local-db:
+	docker-compose down -v && docker-compose up
 
 .PHONY: run-migration
 run-migration:
-	cd migration && cargo run -- refresh
+	cd migration && cargo run
 
 .PHONY: gen
 gen:
@@ -59,10 +64,6 @@ gen:
 	-u postgresql://postgres:postgres@localhost:5432/app \
 	-o app/src/infra/rdb/types
 	sed -i '' '1a\'$$'\n''#![allow(unused)]' app/src/infra/rdb/types/prelude.rs
-
-.PHONY: reset-db
-reset-db:
-	docker-compose down -v && docker-compose up
 
 .PHONY: connect-rds
 connect-rds:
@@ -118,3 +119,7 @@ login-admin-user:
 		--client-id $(CLIENT_ID) \
 		--auth-flow ADMIN_USER_PASSWORD_AUTH \
 		--auth-parameters USERNAME=$(COGNITO_USER_NAME),PASSWORD=Test1234
+
+.PHONY: login-sso
+login-sso:
+	aws sso login --sso-session $(AWS_SSO_SESSION)

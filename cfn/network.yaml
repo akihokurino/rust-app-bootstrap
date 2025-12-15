@@ -1,8 +1,19 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Network infrastructure for development environment'
 
+Parameters:
+  MultipleAZ:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: 'Enable Multi-AZ'
+
+Conditions:
+  IsMultiAZ: !Equals [!Ref MultipleAZ, 'true']
+
 Resources:
-  # VPC
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -13,7 +24,6 @@ Resources:
         - Key: Name
           Value: app-vpc
 
-  # Internet Gateway
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -21,14 +31,12 @@ Resources:
         - Key: Name
           Value: app-igw
 
-  # Attach Gateway
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  # Route Table
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -37,7 +45,6 @@ Resources:
         - Key: Name
           Value: app-rt
 
-  # Default Route
   DefaultRoute:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -46,44 +53,76 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  # Elastic IP for NAT Gateway
-  NATGatewayEIP:
+  NATGatewayEIP1:
     Type: AWS::EC2::EIP
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: app-nat-eip
+          Value: app-nat-eip-1
 
-  # NAT Gateway
-  NATGateway:
-    Type: AWS::EC2::NatGateway
+  NATGatewayEIP2:
+    Type: AWS::EC2::EIP
+    Condition: IsMultiAZ
+    DependsOn: AttachGateway
     Properties:
-      AllocationId: !GetAtt NATGatewayEIP.AllocationId
-      SubnetId: !Ref PublicSubnet1  # NATゲートウェイはパブリックサブネットに配置
+      Domain: vpc
       Tags:
         - Key: Name
-          Value: app-nat
+          Value: app-nat-eip-2
 
-  # Private Route Table
-  PrivateRouteTable:
+  NATGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP1.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: app-nat-1
+
+  NATGateway2:
+    Type: AWS::EC2::NatGateway
+    Condition: IsMultiAZ
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP2.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: app-nat-2
+
+  PrivateRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: app-private-rt
+          Value: app-private-rt-1
 
-  # Private Route (through NAT Gateway)
-  PrivateRoute:
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Condition: IsMultiAZ
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: app-private-rt-2
+
+  PrivateRoute1:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref PrivateRouteTable
+      RouteTableId: !Ref PrivateRouteTable1
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NATGateway
+      NatGatewayId: !Ref NATGateway1
 
-  # Public Subnet 1
+  PrivateRoute2:
+    Type: AWS::EC2::Route
+    Condition: IsMultiAZ
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway2
+
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -95,7 +134,6 @@ Resources:
         - Key: Name
           Value: app-public-subnet-1
 
-  # Public Subnet 2
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -107,59 +145,52 @@ Resources:
         - Key: Name
           Value: app-public-subnet-2
 
-  # Private Subnet 1
-  PrivateSubnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.10.0/24
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: app-private-subnet-1
-
-  # Private Subnet 2
-  PrivateSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.11.0/24
-      AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: app-private-subnet-2
-
-  # Associate Public Subnet 1 with Public Route Table
   PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet1
       RouteTableId: !Ref PublicRouteTable
 
-  # Associate Public Subnet 2 with Public Route Table
   PublicSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
 
-  # Associate Private Subnet 1 with Private Route Table
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: app-private-subnet-1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.12.0/24
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: app-private-subnet-2
+
   PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PrivateSubnet1
-      RouteTableId: !Ref PrivateRouteTable
+      RouteTableId: !Ref PrivateRouteTable1
 
-  # Associate Private Subnet 2 with Private Route Table
   PrivateSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PrivateSubnet2
-      RouteTableId: !Ref PrivateRouteTable
+      RouteTableId: !If [IsMultiAZ, !Ref PrivateRouteTable2, !Ref PrivateRouteTable1]
 
-  # VPC Endpoints用セキュリティグループ
   VPCEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -174,7 +205,6 @@ Resources:
         - Key: Name
           Value: vpc-endpoint-sg
 
-  # Lambda用セキュリティグループ
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -187,7 +217,6 @@ Resources:
         - Key: Name
           Value: lambda-sg
 
-  # Bastion用セキュリティグループ
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -205,20 +234,6 @@ Resources:
         - Key: Name
           Value: bastion-sg
 
-  # CodeBuild用セキュリティグループ
-  CodeBuildSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: 'Security group for CodeBuild'
-      VpcId: !Ref VPC
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: codebuild-sg
-
-  # RDS用セキュリティグループ
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -241,7 +256,6 @@ Resources:
         - Key: Name
           Value: rds-sg
 
-  # Aurora用セキュリティグループ
   AuroraSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -264,7 +278,18 @@ Resources:
         - Key: Name
           Value: aurora-sg
 
-  # SSM VPC Endpoint
+  CodeBuildSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Security group for CodeBuild'
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: codebuild-sg
+
   SSMVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -287,7 +312,6 @@ Resources:
               - 'ssm:GetParameters'
             Resource: '*'
 
-  # SNS VPC Endpoint
   SNSVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -301,15 +325,18 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
       PrivateDnsEnabled: true
 
-  # S3 VPC Endpoint
   S3VPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcId: !Ref VPC
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
-      RouteTableIds:
-        - !Ref PrivateRouteTable
-        - !Ref PublicRouteTable
+      RouteTableIds: !If
+        - IsMultiAZ
+        - - !Ref PrivateRouteTable1
+          - !Ref PrivateRouteTable2
+          - !Ref PublicRouteTable
+        - - !Ref PrivateRouteTable1
+          - !Ref PublicRouteTable
 
 Outputs:
   VPCId:

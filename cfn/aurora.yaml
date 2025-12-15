@@ -34,10 +34,6 @@ Parameters:
     MinValue: 1
     MaxValue: 35
     Description: 'Number of days to retain backups'
-  Suffix:
-    Type: String
-    Default: ''
-    Description: 'Suffix for resource names'
 
 Resources:
   DBSubnetGroup:
@@ -49,13 +45,13 @@ Resources:
         - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet2Id'
       Tags:
         - Key: Name
-          Value: !Sub 'aurora-postgres-subnet-group${Suffix}'
+          Value: !Sub 'aurora-postgres-subnet-group'
 
   AuroraCluster:
     Type: AWS::RDS::DBCluster
     DeletionPolicy: Snapshot
     Properties:
-      DBClusterIdentifier: !Sub 'postgres-aurora-cluster${Suffix}'
+      DBClusterIdentifier: !Sub 'postgres-aurora-cluster'
       Engine: aurora-postgresql
       EngineVersion: '17.5'
       Port: 5432
@@ -70,43 +66,43 @@ Resources:
       DeletionProtection: !Ref DeletionProtection
       Tags:
         - Key: Name
-          Value: !Sub 'postgres-aurora-cluster${Suffix}'
+          Value: !Sub 'postgres-aurora-cluster'
 
   AuroraInstanceWriter:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub 'postgres-aurora-writer${Suffix}'
+      DBInstanceIdentifier: !Sub 'postgres-aurora-writer'
       DBClusterIdentifier: !Ref AuroraCluster
       DBInstanceClass: !Ref DBInstanceClass
       Engine: aurora-postgresql
       PubliclyAccessible: false
       Tags:
         - Key: Name
-          Value: !Sub 'postgres-aurora-writer${Suffix}'
+          Value: !Sub 'postgres-aurora-writer'
 
   AuroraInstanceReader1:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub 'postgres-aurora-reader-1${Suffix}'
+      DBInstanceIdentifier: !Sub 'postgres-aurora-reader-1'
       DBClusterIdentifier: !Ref AuroraCluster
       DBInstanceClass: !Ref DBInstanceClass
       Engine: aurora-postgresql
       PubliclyAccessible: false
       Tags:
         - Key: Name
-          Value: !Sub 'postgres-aurora-reader-1${Suffix}'
+          Value: !Sub 'postgres-aurora-reader-1'
 
   AuroraInstanceReader2:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub 'postgres-aurora-reader-2${Suffix}'
+      DBInstanceIdentifier: !Sub 'postgres-aurora-reader-2'
       DBClusterIdentifier: !Ref AuroraCluster
       DBInstanceClass: !Ref DBInstanceClass
       Engine: aurora-postgresql
       PubliclyAccessible: false
       Tags:
         - Key: Name
-          Value: !Sub 'postgres-aurora-reader-2${Suffix}'
+          Value: !Sub 'postgres-aurora-reader-2'
 
 Outputs:
   ClusterEndpoint:

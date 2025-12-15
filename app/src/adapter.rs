@@ -1,17 +1,15 @@
-use async_trait::async_trait;
-use bytes::Bytes;
-use http::Uri;
-use std::future::Future;
-
-use crate::{domain, AppResult};
-
 use crate::domain::admin_user;
 use crate::domain::types::asset_key::AssetKey;
 use crate::domain::types::email::Email;
 pub use crate::infra::rdb::session_manager::TransactionGuard;
 pub use crate::infra::s3::types::HeadObjectResponse;
+use crate::{domain, AppResult};
+use async_trait::async_trait;
+use bytes::Bytes;
+use http::Uri;
 pub use sea_orm::DatabaseConnection;
 use serde::Serialize;
+use std::future::Future;
 
 #[async_trait]
 pub trait Storage: Send + Sync {
@@ -24,7 +22,7 @@ pub trait Storage: Send + Sync {
 
 #[async_trait]
 pub trait TaskQueue: Send + Sync {
-    async fn publish(&self, input: serde_json::Value, arn: String) -> AppResult<()>;
+    async fn publish(&self, input: serde_json::Value, target: String) -> AppResult<()>;
 }
 
 #[async_trait]
@@ -43,19 +41,16 @@ pub enum DbConn<'a> {
     Db(&'a DatabaseConnection),
     Tx(&'a TransactionGuard),
 }
-
 impl<'a> From<&'a DatabaseConnection> for DbConn<'a> {
     fn from(db: &'a DatabaseConnection) -> Self {
         DbConn::Db(db)
     }
 }
-
 impl<'a> From<&'a TransactionGuard> for DbConn<'a> {
     fn from(tx: &'a TransactionGuard) -> Self {
         DbConn::Tx(tx)
     }
 }
-
 impl sea_orm::ConnectionTrait for DbConn<'_> {
     fn get_database_backend(&self) -> sea_orm::DatabaseBackend {
         match self {

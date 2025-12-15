@@ -24,10 +24,20 @@ Parameters:
     AllowedValues:
       - 'true'
       - 'false'
-    Description: 'Enable Multi-AZ for the RDS instance'
+    Description: 'Enable Multi-AZ'
+  DBInstanceClass:
+    Type: String
+    Default: 'db.t3.micro'
+    AllowedValues:
+      - 'db.t3.micro'
+      - 'db.t3.small'
+      - 'db.t3.medium'
+      - 'db.t3.large'
+      - 'db.r5.large'
+      - 'db.r5.xlarge'
+    Description: 'DB instance class'
 
 Resources:
-  # DB Subnet Group
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
@@ -39,13 +49,12 @@ Resources:
         - Key: Name
           Value: rds-postgres-subnet-group
 
-  # RDS インスタンス
   PostgreSQLDatabase:
     Type: AWS::RDS::DBInstance
     Properties:
       DBInstanceIdentifier: postgres-rds
       DBName: app
-      DBInstanceClass: db.t3.micro
+      DBInstanceClass: !Ref DBInstanceClass
       Engine: postgres
       EngineVersion: '17'
       MasterUsername: postgres
