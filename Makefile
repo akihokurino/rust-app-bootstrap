@@ -65,6 +65,11 @@ gen:
 	-o app/src/infra/rdb/types
 	sed -i '' '1a\'$$'\n''#![allow(unused)]' app/src/infra/rdb/types/prelude.rs
 
+.PHONY: gen-migration-file
+gen-migration-file:
+	@read -p "Enter migration name: " name; \
+	sea-orm-cli migrate generate $$name
+
 .PHONY: connect-rds
 connect-rds:
 	@INSTANCE_ID=$$(aws ec2 describe-instances --filters "Name=tag:Name,Values=bastion" "Name=instance-state-name,Values=running" --query 'Reservations[0].Instances[0].InstanceId' --output text) && \
