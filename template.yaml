@@ -85,8 +85,11 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
+        - AmazonCognitoPowerUser
         - LambdaInvokePolicy:
             FunctionName: "*"
+        - SQSSendMessagePolicy:
+            QueueName: "*"
     Metadata:
       BuildMethod: makefile
 
@@ -117,8 +120,7 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
-        - LambdaInvokePolicy:
-            FunctionName: "*"
+        - AmazonCognitoPowerUser
     Metadata:
       BuildMethod: makefile
 
@@ -144,8 +146,9 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
-        - LambdaInvokePolicy:
-            FunctionName: "*"
+        - AmazonCognitoPowerUser
+        - SQSPollerPolicy:
+            QueueName: "*"
     Metadata:
       BuildMethod: makefile
 
@@ -161,8 +164,7 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
-        - LambdaInvokePolicy:
-            FunctionName: "*"
+        - AmazonCognitoPowerUser
     Metadata:
       BuildMethod: makefile
 
@@ -185,8 +187,7 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
-        - LambdaInvokePolicy:
-            FunctionName: "*"
+        - AmazonCognitoPowerUser
     Metadata:
       BuildMethod: makefile
 
