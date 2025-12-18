@@ -1,7 +1,7 @@
 use crate::adapter::DbConn;
 use crate::domain::user::{Id, User, UserRepository};
 use crate::errors::Kind::{Internal, NotFound};
-use crate::infra::rdb::map_insert_error;
+use crate::infra::rdb::errors::map_insert_error;
 use crate::infra::rdb::types::prelude::*;
 use crate::infra::rdb::types::users;
 use crate::AppResult;

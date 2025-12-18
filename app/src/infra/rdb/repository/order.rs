@@ -2,7 +2,7 @@ use crate::adapter::DbConn;
 use crate::domain::order::{Id, Order, OrderRepository};
 use crate::domain::user;
 use crate::errors::Kind::{Internal, NotFound};
-use crate::infra::rdb::map_insert_error;
+use crate::infra::rdb::errors::map_insert_error;
 use crate::infra::rdb::types::orders;
 use crate::infra::rdb::types::prelude::*;
 use crate::AppResult;
