@@ -94,12 +94,9 @@ impl Drop for TransactionGuard {
     fn drop(&mut self) {
         if let Some(tx) = self.inner.take() {
             if !self.committed.load(Ordering::Relaxed) {
-                let handle = tokio::runtime::Handle::try_current();
-                if let Ok(handle) = handle {
-                    let _ = handle.block_on(async { tx.rollback().await });
-                } else {
-                    drop(tx);
-                }
+                tokio::spawn(async move {
+                    let _ = tx.rollback().await;
+                });
             }
         }
     }
