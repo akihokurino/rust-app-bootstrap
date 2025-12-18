@@ -5,13 +5,13 @@ edition = "2024"
 
 [dependencies]
 async-trait = "0.1"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.48", features = ["full"] }
 sea-orm = { version = "1.1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-json", "with-uuid"] }
-derive_more = { version = "2", features = ["full"] }
+derive_more = { version = "2.1", features = ["full"] }
 base-62 = "0.1"
 rand = "0.9"
 chrono = "0.4"
-unicode-segmentation = "1"
+unicode-segmentation = "1.12"
 once_cell = "1.21"
 aws-config = "1.8"
 aws-sdk-ssm = "1.101"
@@ -19,7 +19,7 @@ aws-sdk-s3 = "1.117"
 aws-sdk-lambda = "1.112"
 aws-sdk-sns = "1.92"
 aws-sdk-sqs = "1.91"
-aws-sdk-cognitoidentityprovider = "1.105.0"
+aws-sdk-cognitoidentityprovider = "1.105"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dotenv-parser = "0.1"
@@ -32,5 +32,6 @@ atty = "0.2"
 async-graphql = "7.0"
 jsonwebtoken = { version = "10.2", features = ["aws_lc_rs"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+# v6対応は保留
 google-identitytoolkit3 = "5.0.5"
 google-fcm1 = "5.0.5"
