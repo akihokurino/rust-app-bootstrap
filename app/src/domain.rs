@@ -4,7 +4,9 @@ pub mod types;
 pub mod user;
 
 use rand::random;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 
@@ -62,6 +64,32 @@ impl<E> Into<String> for Id<E> {
 impl<E> Hash for Id<E> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id.hash(state)
+    }
+}
+impl<E> Display for Id<E> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.id, f)
+    }
+}
+impl<E> AsRef<str> for Id<E> {
+    fn as_ref(&self) -> &str {
+        &self.id
+    }
+}
+impl<E> Serialize for Id<E> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.id.serialize(serializer)
+    }
+}
+impl<'de, E> Deserialize<'de> for Id<E> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Self::from(String::deserialize(deserializer)?))
     }
 }
 

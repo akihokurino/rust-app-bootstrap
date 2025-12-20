@@ -64,11 +64,10 @@ impl OrderDetailRepository for Repository {
     }
 
     async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<Detail> {
-        repository::get::<OrderDetails, Detail>(db, id.as_str()).await
+        repository::get::<OrderDetails, Detail>(db, id).await
     }
 
     async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<Detail>> {
-        let ids: Vec<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
         repository::get_multi::<OrderDetails, Detail, _>(db, order_details::Column::Id, ids).await
     }
 
@@ -77,12 +76,10 @@ impl OrderDetailRepository for Repository {
     }
 
     async fn update(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()> {
-        let id = detail.id.as_str().to_string();
-        repository::update::<OrderDetails, Detail, _>(db, order_details::Column::Id, &id, detail)
-            .await
+        repository::update::<OrderDetails, Detail, _>(db, order_details::Column::Id, detail).await
     }
 
     async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()> {
-        repository::delete::<OrderDetails>(db, id.as_str().to_string()).await
+        repository::delete::<OrderDetails>(db, id).await
     }
 }

@@ -45,11 +45,10 @@ impl UserRepository for Repository {
     }
 
     async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<User> {
-        repository::get::<Users, User>(db, id.as_str()).await
+        repository::get::<Users, User>(db, id).await
     }
 
     async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<User>> {
-        let ids: Vec<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
         repository::get_multi::<Users, User, _>(db, users::Column::Id, ids).await
     }
 
@@ -58,11 +57,10 @@ impl UserRepository for Repository {
     }
 
     async fn update(&self, db: DbConn<'_>, user: User) -> AppResult<()> {
-        let id = user.id.as_str().to_string();
-        repository::update::<Users, User, _>(db, users::Column::Id, &id, user).await
+        repository::update::<Users, User, _>(db, users::Column::Id, user).await
     }
 
     async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()> {
-        repository::delete::<Users>(db, id.as_str().to_string()).await
+        repository::delete::<Users>(db, id).await
     }
 }
