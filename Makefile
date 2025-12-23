@@ -5,7 +5,7 @@ ifeq ($(USE_DOCKER), 1)
 	ifeq ($(USE_DOCKER_CACHE), 1)
 		DOCKER_CACHE_PARAMS := -v "$(shell pwd)/.docker/cache/cargo/registry:/root/.cargo/registry"
 	endif
-	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.87.0-stable
+	DOCKER_CMD_BASE := docker run --rm -v "$(shell pwd):/volume" $(DOCKER_CACHE_PARAMS) $(DOCKER_EXTRA_PARAMS) clux/muslrust:1.92.0-stable
 endif
 
 BIN_OUTPUT_DIR := target/x86_64-unknown-linux-musl/release
