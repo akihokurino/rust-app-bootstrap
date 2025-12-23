@@ -8,7 +8,7 @@ use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::errors::map_insert_error;
 use crate::AppResult;
 use sea_orm::{
-    ColumnTrait, EntityTrait, Iden, IntoActiveModel, PrimaryKeyTrait, QueryFilter, QueryOrder,
+    ColumnTrait, EntityTrait, IntoActiveModel, PrimaryKeyTrait, QueryFilter, QueryOrder,
 };
 
 async fn find<E, T, C>(db: DbConn<'_>, order_column: C) -> AppResult<Vec<T>>
