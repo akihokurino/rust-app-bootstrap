@@ -1,10 +1,12 @@
-use crate::adapter::{AdminAuth, DBSession, RemoteFunction, Storage, TaskQueue, UserAuth};
+use crate::adapter::{
+    AdminAuth, DBSession, ImageCdn, RemoteFunction, Storage, TaskQueue, UserAuth,
+};
 use crate::domain::order::detail::OrderDetailRepository;
 use crate::domain::order::OrderRepository;
 use crate::domain::user::UserRepository;
 use crate::errors::AppError;
 use crate::errors::Kind::Internal;
-use crate::infra::{cognito, firebase};
+use crate::infra::{cloudfront, cognito, firebase};
 use aws_config::BehaviorVersion;
 use google_fcm1::{hyper, hyper_rustls};
 use google_identitytoolkit3::oauth2::ServiceAccountAuthenticator;
@@ -29,6 +31,7 @@ pub type AppResult<T> = Result<T, AppError>;
 pub struct App {
     pub env: env::Env,
     pub storage: Arc<dyn Storage>,
+    pub image_cdn: Option<Arc<dyn ImageCdn>>,
     pub user_auth: Arc<dyn UserAuth>,
     pub admin_auth: Arc<dyn AdminAuth>,
     pub sns_task_queue: Arc<dyn TaskQueue>,
@@ -72,6 +75,20 @@ pub async fn app() -> AppResult<&'static App> {
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
     ));
+    let image_cdn: Option<Arc<dyn ImageCdn>> =
+        if let (Some(domain), Some(key_pair_id), Some(private_key)) = (
+            envs.cloudfront_domain.clone(),
+            envs.cloudfront_key_pair_id.clone(),
+            envs.cloudfront_private_key.clone(),
+        ) {
+            Some(Arc::new(cloudfront::Adapter::new(
+                domain,
+                key_pair_id,
+                private_key,
+            )?))
+        } else {
+            None
+        };
     let admin_auth: Arc<dyn AdminAuth> = Arc::new(cognito::Adapter::new(
         aws_sdk_cognitoidentityprovider::Client::new(&aws_config),
         envs.cognito_admin_user_pool_id.clone(),
@@ -139,6 +156,7 @@ pub async fn app() -> AppResult<&'static App> {
     let app = App {
         env: envs,
         storage,
+        image_cdn,
         user_auth,
         admin_auth,
         sns_task_queue,

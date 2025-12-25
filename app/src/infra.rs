@@ -1,3 +1,4 @@
+pub mod cloudfront;
 pub mod cognito;
 pub mod firebase;
 pub mod lambda;

@@ -3,6 +3,7 @@ use crate::graphql::data_loader::user::UserDataLoader;
 use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::{Me, User};
 use crate::graphql::service::AppContext;
+use crate::graphql::shared::types::ImageSize;
 use crate::graphql::GraphResult;
 use app::errors::Kind::BadRequest;
 use async_graphql::{Context, MergedObject, Object, ID};
@@ -18,13 +19,21 @@ impl DefaultQuery {
         "ok".to_string()
     }
 
-    async fn pre_sign_download(&self, ctx: &Context<'_>, key: String) -> GraphResult<String> {
+    async fn pre_sign_download(
+        &self,
+        ctx: &Context<'_>,
+        key: String,
+        size: Option<ImageSize>,
+    ) -> GraphResult<String> {
         let _uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
-        let presign_url = app
-            .storage
-            .presign_for_get(&key.try_into().map_err(BadRequest.withf())?)
-            .await?;
+        let asset_key = key.try_into().map_err(BadRequest.withf())?;
+
+        let presign_url = match (size, &app.image_cdn) {
+            (Some(size), Some(cdn)) => cdn.presign_for_get(&asset_key, size.into()).await?,
+            _ => app.storage.presign_for_get(&asset_key).await?,
+        };
+
         Ok(presign_url.to_string())
     }
 

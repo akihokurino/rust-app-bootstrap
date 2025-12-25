@@ -32,6 +32,10 @@ Parameters:
     Type: String
     Default: 'cognito'
     Description: 'Name of the Cognito stack'
+  CloudFrontStackName:
+    Type: String
+    Default: 'cloudfront'
+    Description: 'Name of the CloudFront stack'
 
 Globals:
   Function:
@@ -58,6 +62,8 @@ Globals:
           Fn::ImportValue: !Sub '${SQSStackName}-AsyncTaskQueueUrl'
         COGNITO_ADMIN_USER_POOL_ID:
           Fn::ImportValue: !Sub '${CognitoStackName}-CognitoAdminUserPoolId'
+        CLOUDFRONT_DOMAIN:
+          Fn::ImportValue: !Sub '${CloudFrontStackName}-DistributionDomainName'
 
 Resources:
   ApiFunction:

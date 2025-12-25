@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  S3StackName:
+    Type: String
+    Default: 's3'
+  ImageOptimizerLambdaFunctionArn:
+    Type: String
+  PublicKey:
+    Type: String
+    Default: |
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA79VE4a+rei8EtgBighDp
+      wg0pzmVOuaXZi7pa2mjLpnzYw6bNzlKJGIG6K59XS3akWa23uDbpSIoZPu5jWUTa
+      RDeINRObsRn8JM+CKn283eHx0c9st6KpitQ6x9QwQLTGScMg/V3zN10WB+i2nLH0
+      mwBrQAQfKpMGDvayFaQcMvLCrGFexi7cZbHB/s832KNBRr6uq2K4Vb/pQaCkiPsQ
+      aerlsBCNbfIl2mTrHJFIEunBXgUs3BeAlCHnZ7e245+fZOKKqKMNNwBgqtNSo6w7
+      4Jf69k15+5IVSdXGYdFDJvX1dolbMTy/997BJT9YYfTEnXjJR4+xUxIdR3PI63nN
+      mQIDAQAB
+      -----END PUBLIC KEY-----
+  PublicKeyCallerReference:
+    Type: String
+    Default: 'cloud-front-pk-v1'
+
+Resources:
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        SigningBehavior: always
+        SigningProtocol: sigv4
+        OriginAccessControlOriginType: s3
+        Name:
+          Fn::Sub:
+            - '${BucketName}.s3.ap-northeast-1.amazonaws.com'
+            - BucketName:
+                Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+
+  CloudFrontKeyGroup:
+    Type: AWS::CloudFront::KeyGroup
+    Properties:
+      KeyGroupConfig:
+        Items:
+          - !Ref CloudFrontPublicKey
+        Name: cloud-front-kg
+
+  CloudFrontPublicKey:
+    Type: AWS::CloudFront::PublicKey
+    Properties:
+      PublicKeyConfig:
+        CallerReference: !Ref PublicKeyCallerReference
+        EncodedKey: !Ref PublicKey
+        Name: cloud-front-pk
+
+  CloudFrontCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        MinTTL: 1
+        MaxTTL: 31536000
+        DefaultTTL: 31536000
+        Name: cloud-front-cache-policy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          QueryStringsConfig:
+            QueryStrings:
+              - Signature
+              - Expires
+              - Key-Pair-Id
+            QueryStringBehavior: allExcept
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: whitelist
+            Headers:
+              - Origin
+          CookiesConfig:
+            CookieBehavior: none
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        PriceClass: PriceClass_200
+        Origins:
+          - Id:
+              Fn::Sub:
+                - '${BucketName}.s3.ap-northeast-1.amazonaws.com'
+                - BucketName:
+                    Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+            DomainName:
+              Fn::Sub:
+                - '${BucketName}.s3.ap-northeast-1.amazonaws.com'
+                - BucketName:
+                    Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId:
+            Fn::Sub:
+              - '${BucketName}.s3.ap-northeast-1.amazonaws.com'
+              - BucketName:
+                  Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+          ViewerProtocolPolicy: https-only
+          Compress: true
+          AllowedMethods:
+            - HEAD
+            - GET
+          CachedMethods:
+            - HEAD
+            - GET
+          CachePolicyId: !Ref CloudFrontCachePolicy
+          # 署名付 URL を必須にする
+          TrustedKeyGroups:
+            - !Ref CloudFrontKeyGroup
+          # S3のレスポンス後に画像最適化Lambdaを実行
+          LambdaFunctionAssociations:
+            - EventType: origin-response
+              IncludeBody: false
+              LambdaFunctionARN: !Ref ImageOptimizerLambdaFunctionArn
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource:
+              Fn::Sub:
+                - 'arn:aws:s3:::${BucketName}/*'
+                - BucketName:
+                    Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+Outputs:
+  DistributionDomainName:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-DistributionDomainName"

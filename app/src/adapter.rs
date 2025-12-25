@@ -1,6 +1,7 @@
 use crate::domain::admin_user;
 use crate::domain::types::asset_key::AssetKey;
 use crate::domain::types::email::Email;
+use crate::domain::types::image_size::ImageSize;
 pub use crate::infra::rdb::session_manager::TransactionGuard;
 pub use crate::infra::s3::types::HeadObjectResponse;
 use crate::{domain, AppResult};
@@ -18,6 +19,11 @@ pub trait Storage: Send + Sync {
     async fn download_object(&self, key: &AssetKey) -> AppResult<Bytes>;
     async fn head_object(&self, key: &AssetKey) -> AppResult<HeadObjectResponse>;
     async fn copy_object(&self, src_key: &AssetKey, dest_key: &AssetKey) -> AppResult<()>;
+}
+
+#[async_trait]
+pub trait ImageCdn: Send + Sync {
+    async fn presign_for_get(&self, key: &AssetKey, size: ImageSize) -> AppResult<Uri>;
 }
 
 #[async_trait]

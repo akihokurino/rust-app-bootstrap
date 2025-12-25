@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: 'S3 bucket name for user data'
+  DeploymentTimestamp:
+    Type: String
+    Description: 'Timestamp to force new version creation'
+
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      MemorySize: 1024
+      Timeout: 15
+      Handler: src/index.handler
+      Runtime: nodejs20.x
+      Role: !GetAtt FunctionRole.Arn
+
+  FunctionVersion:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName: !Ref Function
+      Description: !Sub 'Deployment ${DeploymentTimestamp}'
+
+  LambdaEdgePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FunctionVersion
+      Action: lambda:GetFunction
+      Principal: edgelambda.amazonaws.com
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FunctionVersion
+      Action: lambda:InvokeFunction
+      Principal: edgelambda.amazonaws.com
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: main
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::${S3BucketName}/*'
+
+Outputs:
+  FunctionArn:
+    Value: !Ref FunctionVersion
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArn'

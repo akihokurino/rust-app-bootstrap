@@ -18,6 +18,9 @@ pub struct Env {
     pub cognito_admin_user_pool_id: String,
     pub google_project_id: String,
     pub google_application_credentials: Option<oauth2::ServiceAccountKey>,
+    pub cloudfront_domain: Option<String>,
+    pub cloudfront_key_pair_id: Option<String>,
+    pub cloudfront_private_key: Option<String>,
 }
 impl Env {
     pub fn new() -> Self {
@@ -49,6 +52,9 @@ impl Env {
                 .expect("failed to parse COGNITO_ADMIN_USER_POOL_ID"),
             google_project_id: must_env("GOOGLE_PROJECT_ID"),
             google_application_credentials: google_service_account,
+            cloudfront_domain: std::env::var("CLOUDFRONT_DOMAIN").ok(),
+            cloudfront_key_pair_id: std::env::var("CLOUDFRONT_KEY_PAIR_ID").ok(),
+            cloudfront_private_key: std::env::var("CLOUDFRONT_PRIVATE_KEY").ok(),
         }
     }
 

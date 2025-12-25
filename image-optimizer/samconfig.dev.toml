@@ -1,0 +1,11 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "image-optimizer"
+s3_prefix = "image-optimizer"
+resolve_s3 = true
+region = "us-east-1"
+confirm_changeset = true
+no_fail_on_empty_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "S3BucketName=matching-app-dev-userdata"
+image_repositories = []
