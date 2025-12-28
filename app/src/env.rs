@@ -41,15 +41,11 @@ impl Env {
                 .unwrap_or(false),
             database_url: std::env::var("DATABASE_URL")
                 .unwrap_or("postgresql://postgres:postgres@localhost:5432/app".to_string()),
-            s3_bucket_name: std::env::var("S3_BUCKET_NAME")
-                .expect("failed to parse S3_BUCKET_NAME"),
-            sns_async_task_topic_arn: std::env::var("SNS_ASYNC_TASK_TOPIC_ARN")
-                .expect("failed to parse SNS_ASYNC_TASK_TOPIC_ARN"),
-            sqs_async_task_queue_url: std::env::var("SQS_ASYNC_TASK_QUEUE_URL")
-                .expect("failed to parse SQS_ASYNC_TASK_QUEUE_URL"),
+            s3_bucket_name: must_env("S3_BUCKET_NAME"),
+            sns_async_task_topic_arn: must_env("SNS_ASYNC_TASK_TOPIC_ARN"),
+            sqs_async_task_queue_url: must_env("SQS_ASYNC_TASK_QUEUE_URL"),
             sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
-            cognito_admin_user_pool_id: std::env::var("COGNITO_ADMIN_USER_POOL_ID")
-                .expect("failed to parse COGNITO_ADMIN_USER_POOL_ID"),
+            cognito_admin_user_pool_id: must_env("COGNITO_ADMIN_USER_POOL_ID"),
             google_project_id: must_env("GOOGLE_PROJECT_ID"),
             google_application_credentials: google_service_account,
             cloudfront_domain: std::env::var("CLOUDFRONT_DOMAIN").ok(),
