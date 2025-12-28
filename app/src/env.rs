@@ -1,3 +1,4 @@
+use dotenv::dotenv;
 use google_identitytoolkit3::oauth2;
 use std::str::FromStr;
 
@@ -24,6 +25,10 @@ pub struct Env {
 }
 impl Env {
     pub fn new() -> Self {
+        if Self::is_local() {
+            dotenv().ok();
+        }
+
         let google_service_account =
             if let Some(cred) = std::env::var("GOOGLE_APPLICATION_CREDENTIALS_BODY").ok() {
                 let parsed: Option<oauth2::ServiceAccountKey> =
@@ -39,8 +44,7 @@ impl Env {
             with_lambda: std::env::var("WITH_LAMBDA")
                 .map(|v| bool::from_str(&v).expect("failed to parse WITH_LAMBDA"))
                 .unwrap_or(false),
-            database_url: std::env::var("DATABASE_URL")
-                .unwrap_or("postgresql://postgres:postgres@localhost:5432/app".to_string()),
+            database_url: must_env("DATABASE_URL"),
             s3_bucket_name: must_env("S3_BUCKET_NAME"),
             sns_async_task_topic_arn: must_env("SNS_ASYNC_TASK_TOPIC_ARN"),
             sqs_async_task_queue_url: must_env("SQS_ASYNC_TASK_QUEUE_URL"),
@@ -56,5 +60,11 @@ impl Env {
 
     pub fn is_prod(&self) -> bool {
         self.env == "prod"
+    }
+
+    pub fn is_local() -> bool {
+        std::env::var("IS_LOCAL")
+            .map(|v| bool::from_str(&v).expect("failed to parse IS_LOCAL"))
+            .unwrap_or(false)
     }
 }
