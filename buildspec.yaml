@@ -2,24 +2,44 @@ version: 0.2
 
 phases:
   install:
-    commands: [ ]
+    commands:
+      - if [ -d ".lcache/.cargo" ]; then cp -r .lcache/.cargo /tmp/.cargo && mv /tmp/.cargo $HOME/; fi
+      - |
+        if [ ! -f "$HOME/.cargo/bin/rustc" ]; then
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        fi
+      - export PATH="$HOME/.cargo/bin:$PATH"
+      - rustup default stable
+
   pre_build:
     commands:
+      - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
       - if [ -n "$DOCKER_CONFIG_BODY" ]; then echo "DOCKER_CONFIG_BODY detected. expand to ~/.docker/config.json" && mkdir -p ~/.docker && echo "$DOCKER_CONFIG_BODY" > ~/.docker/config.json ; fi
       - mkdir -p .lcache/target .lcache/.docker/cache/cargo/registry
       - mkdir -p .docker/cache/cargo
       - cp -rH .lcache/target ./
       - cp -rH .lcache/.docker/cache/cargo/registry .docker/cache/cargo/
+
   build:
     commands:
+      - export PATH="$HOME/.cargo/bin:$PATH"
       - DATABASE_URL=$DATABASE_URL make run-migration
-      - make USE_DOCKER=1 USE_DOCKER_CACHE=1 STRIP=1 SAM_CONFIG_FILE=samconfig.toml deploy
-      - rm -Rf .lcache/target/* .lcache/.docker/cache/cargo/registry
+      - rm -rf .lcache
+      - USE_DOCKER=1 USE_DOCKER_CACHE=1 STRIP=1 SAM_CONFIG_FILE=samconfig.toml make deploy
+      - mkdir -p .lcache/target .lcache/.docker/cache/cargo/registry
       - cp -r target/* .lcache/target/
-      - cp -r .docker/cache/cargo/registry .lcache/.docker/cache/cargo/
+      - if [ -d ".docker/cache/cargo/registry" ] && [ "$(ls -A .docker/cache/cargo/registry)" ]; then cp -r .docker/cache/cargo/registry/* .lcache/.docker/cache/cargo/registry/; fi
+
   post_build:
-    commands: [ ]
+    commands:
+      - mkdir -p .lcache/.cargo
+      - |
+        if [ ! -L "$HOME/.cargo" ] && [ "$(realpath $HOME/.cargo)" != "$(realpath .lcache/.cargo)" ]; then
+          cp -r $HOME/.cargo/* .lcache/.cargo/
+        fi
+
 cache:
   paths:
     - .lcache/.docker/cache/**/*
     - .lcache/target/**/*
+    - .lcache/.cargo/**/*

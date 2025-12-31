@@ -3,3 +3,4 @@
 .aws-sam
 .env
 .envrc
+.docker/config.json
