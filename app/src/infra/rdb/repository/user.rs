@@ -12,6 +12,8 @@ impl TryFrom<users::Model> for User {
         Ok(Self {
             id: v.id.into(),
             name: v.name.try_into()?,
+            birthdate: v.birthdate.into(),
+            gender: v.gender.try_into()?,
             created_at: v.created_at.into(),
             updated_at: v.updated_at.into(),
         })
@@ -23,6 +25,8 @@ impl From<User> for users::Model {
         Self {
             id: v.id.into(),
             name: v.name.into(),
+            birthdate: v.birthdate.into(),
+            gender: v.gender.into(),
             created_at: v.created_at.into(),
             updated_at: v.updated_at.into(),
         }

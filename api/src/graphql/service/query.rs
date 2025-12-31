@@ -3,8 +3,8 @@ use crate::graphql::data_loader::user::UserDataLoader;
 use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::{Me, User};
 use crate::graphql::service::AppContext;
-use crate::graphql::shared::types::ImageSize;
 use crate::graphql::GraphResult;
+use app::domain::types::image_size::ImageSize;
 use app::errors::Kind::BadRequest;
 use async_graphql::{Context, MergedObject, Object, ID};
 

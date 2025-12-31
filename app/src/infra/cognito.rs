@@ -1,14 +1,12 @@
 mod errors;
+mod types;
 
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use async_graphql::async_trait::async_trait;
 use aws_sdk_cognitoidentityprovider::types::AttributeType;
-use derive_more::Deref;
 use jsonwebtoken::{DecodingKey, Validation};
-use serde::Deserialize;
-use serde_json::Value;
 
 use crate::adapter::AdminAuth;
 use crate::domain::admin_user;
@@ -19,7 +17,7 @@ use crate::AppResult;
 #[derive(Clone, Debug)]
 pub struct Adapter {
     client: aws_sdk_cognitoidentityprovider::Client,
-    jwks: Arc<RwLock<HashMap<String, Jwk>>>,
+    jwks: Arc<RwLock<HashMap<String, types::Jwk>>>,
     user_pool_id: String,
 }
 
@@ -64,7 +62,7 @@ impl AdminAuth for Adapter {
         let mut validation = Validation::new(jsonwebtoken::Algorithm::RS256);
         validation.validate_aud = false;
 
-        let claims = jsonwebtoken::decode::<Claims>(
+        let claims = jsonwebtoken::decode::<types::Claims>(
             token,
             &DecodingKey::from_rsa_components(&jwk.n, &jwk.e).map_err(BadRequest.from_srcf())?,
             &validation,
@@ -142,51 +140,18 @@ impl AdminAuth for Adapter {
     }
 }
 
-async fn fetch_jwks(user_pool_id: &str) -> AppResult<HashMap<String, Jwk>> {
+async fn fetch_jwks(user_pool_id: &str) -> AppResult<HashMap<String, types::Jwk>> {
     Ok(reqwest::get(format!(
         "https://cognito-idp.ap-northeast-1.amazonaws.com/{}/.well-known/jwks.json",
         user_pool_id
     ))
     .await
     .map_err(Internal.from_srcf())?
-    .json::<KeyResponse>()
+    .json::<types::KeyResponse>()
     .await
     .map_err(Internal.from_srcf())?
     .keys
     .into_iter()
     .map(|k| (k.kid.clone(), k))
     .collect())
-}
-
-#[derive(Clone, Debug, Deserialize)]
-struct Jwk {
-    e: String,
-    // alg: String, RS256
-    // kty: String, RSA
-    kid: String,
-    n: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct KeyResponse {
-    keys: Vec<Jwk>,
-}
-
-#[derive(Debug, Clone, Deserialize, Deref)]
-#[serde(rename_all = "camelCase")]
-struct Claims(serde_json::Map<String, Value>);
-impl Claims {
-    pub fn username(&self) -> Option<String> {
-        self.get_str_val("cognito:username")
-    }
-    pub fn email(&self) -> Option<String> {
-        self.get_str_val("email")
-    }
-
-    pub fn get_str_val(&self, key: &str) -> Option<String> {
-        self.0.get(key).and_then(|v| match v {
-            Value::String(v) => Some(v.to_string()),
-            _ => None,
-        })
-    }
 }

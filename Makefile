@@ -44,7 +44,7 @@ deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 
 .PHONY: run-local-api
 run-local-api:
-	SSM_DOTENV_PARAMETER_NAME=/app/server/dotenv cargo run --bin api
+	SSM_DOTENV_PARAMETER_NAME=/app/server/dotenv IS_LOCAL=true cargo run --bin api
 
 .PHONY: run-local-db
 run-local-db:

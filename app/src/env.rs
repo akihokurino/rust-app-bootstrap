@@ -17,8 +17,12 @@ pub struct Env {
     pub sqs_async_task_queue_url: String,
     pub sync_task_lambda_arn: String,
     pub cognito_admin_user_pool_id: String,
-    pub google_project_id: String,
+
+    // Google Cloud関連を使う場合は必須
+    pub google_project_id: Option<String>,
     pub google_application_credentials: Option<oauth2::ServiceAccountKey>,
+
+    // ImageOptimizerを使う場合は必須
     pub cloudfront_domain: Option<String>,
     pub cloudfront_key_pair_id: Option<String>,
     pub cloudfront_private_key: Option<String>,
@@ -50,8 +54,12 @@ impl Env {
             sqs_async_task_queue_url: must_env("SQS_ASYNC_TASK_QUEUE_URL"),
             sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
             cognito_admin_user_pool_id: must_env("COGNITO_ADMIN_USER_POOL_ID"),
-            google_project_id: must_env("GOOGLE_PROJECT_ID"),
+
+            // Google Cloud関連を使う場合は必須
+            google_project_id: std::env::var("GOOGLE_PROJECT_ID").ok(),
             google_application_credentials: google_service_account,
+
+            // ImageOptimizerを使う場合は必須
             cloudfront_domain: std::env::var("CLOUDFRONT_DOMAIN").ok(),
             cloudfront_key_pair_id: std::env::var("CLOUDFRONT_KEY_PAIR_ID").ok(),
             cloudfront_private_key: std::env::var("CLOUDFRONT_PRIVATE_KEY").ok(),

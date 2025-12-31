@@ -1,16 +1,10 @@
+pub mod enum_value;
+
 use app::domain::types;
 use app::domain::types::time::ParseFromRfc3339;
-use async_graphql::{Enum, InputValueError, InputValueResult, Scalar, ScalarType, SimpleObject};
+use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, SimpleObject};
 use async_graphql_value::ConstValue;
 use derive_more::{From, Into};
-
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
-#[graphql(remote = "app::domain::types::image_size::ImageSize")]
-pub enum ImageSize {
-    Large,
-    Medium,
-    Small,
-}
 
 #[derive(SimpleObject)]
 pub struct BoolPayload {

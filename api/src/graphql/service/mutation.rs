@@ -2,9 +2,10 @@ use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::Me;
 use crate::graphql::service::AppContext;
 use crate::graphql::service::AppResult;
-use crate::graphql::shared::types::BoolPayload;
+use crate::graphql::shared::types::{BoolPayload, Date};
 use crate::graphql::GraphResult;
 use app::domain;
+use app::domain::user::Gender;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Internal;
 use async_graphql::{Context, Enum, InputObject, MergedObject, Object, SimpleObject};
@@ -81,7 +82,12 @@ impl DefaultMutation {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
-        let user = domain::user::User::new(uid, input.name.try_into().map_err(BadRequest.withf())?);
+        let user = domain::user::User::new(
+            uid,
+            input.name.try_into().map_err(BadRequest.withf())?,
+            input.birthdate.0,
+            input.gender,
+        );
 
         let tx = app.db_session.begin_tx().await?;
         app.user_repository.insert(tx.conn(), user.clone()).await?;
@@ -96,7 +102,11 @@ impl DefaultMutation {
 
         let tx = app.db_session.begin_tx().await?;
         let user = app.user_repository.get(tx.conn(), &uid).await?;
-        let user = user.update(input.name.try_into().map_err(BadRequest.withf())?);
+        let user = user.update(
+            input.name.try_into().map_err(BadRequest.withf())?,
+            input.birthdate.0,
+            input.gender,
+        );
         app.user_repository.update(tx.conn(), user.clone()).await?;
         tx.commit().await?;
 
@@ -153,11 +163,15 @@ impl DefaultMutation {
 #[derive(InputObject)]
 struct UserCreateInput {
     pub name: String,
+    pub birthdate: Date,
+    pub gender: Gender,
 }
 
 #[derive(InputObject)]
 struct UserUpdateInput {
     pub name: String,
+    pub birthdate: Date,
+    pub gender: Gender,
 }
 
 #[derive(InputObject)]

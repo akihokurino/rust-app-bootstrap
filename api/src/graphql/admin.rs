@@ -39,7 +39,7 @@ pub type Schema = async_graphql::Schema<QueryRoot, EmptyMutation, EmptySubscript
 #[derive(Clone)]
 pub struct HttpHandler {
     schema: Schema,
-    admin_auth: Arc<dyn AdminAuth>,
+    auth: Option<Arc<dyn AdminAuth>>,
 }
 
 impl HttpHandler {
@@ -52,7 +52,7 @@ impl HttpHandler {
 
         HttpHandler {
             schema,
-            admin_auth: app.admin_auth,
+            auth: Some(app.admin_auth),
         }
     }
 
@@ -60,9 +60,9 @@ impl HttpHandler {
         let mut gql_req = gql_req.into_inner();
 
         let headers: HeaderMap = HeaderMap::from_iter(http_req.headers().clone().into_iter());
-        gql_req = gql_req.data(match headers.get("authorization") {
-            None => Err(Unauthorized.into()),
-            Some(hv) => verify_token(&*self.admin_auth, hv).await,
+        gql_req = gql_req.data(match (headers.get("authorization"), self.auth.clone()) {
+            (Some(hv), Some(auth)) => verify_token(&*auth, hv).await,
+            _ => Err(Unauthorized.into()),
         });
 
         if let Some(hv) = headers.get("x-debug-user-id") {

@@ -22,11 +22,6 @@ pub trait Storage: Send + Sync {
 }
 
 #[async_trait]
-pub trait ImageCdn: Send + Sync {
-    async fn presign_for_get(&self, key: &AssetKey, size: ImageSize) -> AppResult<Uri>;
-}
-
-#[async_trait]
 pub trait TaskQueue: Send + Sync {
     async fn publish(&self, input: serde_json::Value, target: String) -> AppResult<()>;
 }
@@ -42,7 +37,6 @@ pub trait DBSession: Send + Sync {
     fn conn(&self) -> DbConn<'_>;
     async fn begin_tx(&self) -> AppResult<TransactionGuard>;
 }
-
 pub enum DbConn<'a> {
     Db(&'a DatabaseConnection),
     Tx(&'a TransactionGuard),
@@ -147,6 +141,14 @@ impl sea_orm::ConnectionTrait for DbConn<'_> {
 }
 
 #[async_trait]
+pub trait AdminAuth: Send + Sync {
+    async fn verify(&self, token: &str) -> AppResult<admin_user::User>;
+    async fn get(&self, id: &admin_user::Id) -> AppResult<admin_user::User>;
+    async fn create(&self, id: admin_user::Id, email: Email) -> AppResult<()>;
+    async fn delete(&self, id: &admin_user::Id) -> AppResult<()>;
+}
+
+#[async_trait]
 pub trait UserAuth: Send + Sync {
     async fn verify(&self, token: &str) -> AppResult<domain::user::Id>;
     async fn get(&self, id: &domain::user::Id) -> AppResult<UserPrincipal>;
@@ -174,9 +176,6 @@ impl UserPrincipal {
 }
 
 #[async_trait]
-pub trait AdminAuth: Send + Sync {
-    async fn verify(&self, token: &str) -> AppResult<admin_user::User>;
-    async fn get(&self, id: &admin_user::Id) -> AppResult<admin_user::User>;
-    async fn create(&self, id: admin_user::Id, email: Email) -> AppResult<()>;
-    async fn delete(&self, id: &admin_user::Id) -> AppResult<()>;
+pub trait ImageCdn: Send + Sync {
+    async fn presign_for_get(&self, key: &AssetKey, size: ImageSize) -> AppResult<Uri>;
 }

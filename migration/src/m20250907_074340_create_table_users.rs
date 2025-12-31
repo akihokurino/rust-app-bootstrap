@@ -13,8 +13,18 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(string(Users::Id).primary_key())
                     .col(string(Users::Name).not_null())
-                    .col(timestamp_with_time_zone(Users::CreatedAt).not_null().default(Expr::current_timestamp()))
-                    .col(timestamp_with_time_zone(Users::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(date(Users::Birthdate).not_null())
+                    .col(string(Users::Gender).not_null())
+                    .col(
+                        timestamp_with_time_zone(Users::CreatedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp_with_time_zone(Users::UpdatedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
                     .to_owned(),
             )
             .await
@@ -32,6 +42,8 @@ enum Users {
     Table,
     Id,
     Name,
+    Birthdate,
+    Gender,
     CreatedAt,
     UpdatedAt,
 }

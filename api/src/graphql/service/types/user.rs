@@ -1,5 +1,6 @@
 use crate::graphql::service::types::order::Order;
-use crate::graphql::shared::types::DateTime;
+use crate::graphql::shared::types::enum_value::Gender;
+use crate::graphql::shared::types::{Date, DateTime};
 use crate::graphql::GraphResult;
 use app::domain;
 use async_graphql::{Context, Object, ID};
@@ -15,6 +16,14 @@ impl Me {
 
     async fn name(&self) -> String {
         self.0.name.to_string()
+    }
+
+    async fn birthdate(&self) -> Date {
+        self.0.birthdate.into()
+    }
+
+    async fn gender(&self) -> Gender {
+        self.0.gender.into()
     }
 
     async fn orders(&self, ctx: &Context<'_>) -> GraphResult<Vec<Order>> {
