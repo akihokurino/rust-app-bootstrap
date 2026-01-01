@@ -1,3 +1,4 @@
+use crate::m20250907_074340_create_table_users::Users;
 use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
@@ -12,14 +13,20 @@ impl MigrationTrait for Migration {
                     .table(Orders::Table)
                     .if_not_exists()
                     .col(string(Orders::Id).primary_key())
-                    .col(string(Orders::UserId).not_null())
-                    .col(timestamp_with_time_zone(Orders::CreatedAt).not_null().default(Expr::current_timestamp()))
-                    .col(timestamp_with_time_zone(Orders::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(string(Orders::UserId))
+                    .col(
+                        timestamp_with_time_zone(Orders::CreatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp_with_time_zone(Orders::UpdatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_orders_user")
                             .from(Orders::Table, Orders::UserId)
-                            .to(Users::Table, Users::Id)
+                            .to(Users::Table, Users::Id),
                     )
                     .to_owned(),
             )
@@ -34,16 +41,10 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Orders {
+pub enum Orders {
     Table,
     Id,
     UserId,
     CreatedAt,
     UpdatedAt,
-}
-
-#[derive(DeriveIden)]
-enum Users {
-    Table,
-    Id,
 }

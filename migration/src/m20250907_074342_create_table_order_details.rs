@@ -1,3 +1,4 @@
+use crate::m20250907_074341_create_table_orders::Orders;
 use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
@@ -12,16 +13,22 @@ impl MigrationTrait for Migration {
                     .table(OrderDetails::Table)
                     .if_not_exists()
                     .col(string(OrderDetails::Id).primary_key())
-                    .col(string(OrderDetails::OrderId).not_null())
-                    .col(string(OrderDetails::ProductName).not_null())
-                    .col(integer(OrderDetails::Quantity).not_null())
-                    .col(timestamp_with_time_zone(OrderDetails::CreatedAt).not_null().default(Expr::current_timestamp()))
-                    .col(timestamp_with_time_zone(OrderDetails::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(string(OrderDetails::OrderId))
+                    .col(string(OrderDetails::ProductName))
+                    .col(integer(OrderDetails::Quantity))
+                    .col(
+                        timestamp_with_time_zone(OrderDetails::CreatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp_with_time_zone(OrderDetails::UpdatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_order_details_order")
                             .from(OrderDetails::Table, OrderDetails::OrderId)
-                            .to(Orders::Table, Orders::Id)
+                            .to(Orders::Table, Orders::Id),
                     )
                     .to_owned(),
             )
@@ -44,10 +51,4 @@ enum OrderDetails {
     Quantity,
     CreatedAt,
     UpdatedAt,
-}
-
-#[derive(DeriveIden)]
-enum Orders {
-    Table,
-    Id,
 }
