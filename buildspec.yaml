@@ -24,6 +24,7 @@ phases:
     commands:
       - export PATH="$HOME/.cargo/bin:$PATH"
       - DATABASE_URL=$DATABASE_URL make run-migration
+      - make gen
       - rm -rf .lcache
       - USE_DOCKER=1 USE_DOCKER_CACHE=1 STRIP=1 SAM_CONFIG_FILE=samconfig.toml make deploy
       - mkdir -p .lcache/target .lcache/.docker/cache/cargo/registry

@@ -62,8 +62,8 @@ run-migration:
 gen:
 	sea-orm-cli generate entity \
 	-u postgresql://postgres:postgres@localhost:5432/app \
-	-o app/src/infra/rdb/types
-	sed -i '' '1a\'$$'\n''#![allow(unused)]' app/src/infra/rdb/types/prelude.rs
+	-o app/src/infra/rdb/generated
+	sed -i '' '1a\'$$'\n''#![allow(unused)]' app/src/infra/rdb/generated/prelude.rs
 
 .PHONY: gen-migration-file
 gen-migration-file:

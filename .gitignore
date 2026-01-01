@@ -4,3 +4,4 @@
 .env
 .envrc
 .docker/config.json
+generated/
