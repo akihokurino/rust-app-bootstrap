@@ -61,7 +61,7 @@ run-migration:
 .PHONY: gen
 gen:
 	sea-orm-cli generate entity \
-	-u postgresql://postgres:postgres@localhost:5432/app \
+	-u $(if $(DATABASE_URL),$(DATABASE_URL),postgresql://postgres:postgres@localhost:5432/app) \
 	-o app/src/infra/rdb/generated
 	{ echo '#![allow(unused)]'; cat app/src/infra/rdb/generated/prelude.rs; } > app/src/infra/rdb/generated/prelude.rs.tmp && \
     mv app/src/infra/rdb/generated/prelude.rs.tmp app/src/infra/rdb/generated/prelude.rs
