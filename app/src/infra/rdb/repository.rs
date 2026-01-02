@@ -100,29 +100,6 @@ where
     Ok(())
 }
 
-async fn update_by_id<E, T, C>(
-    db: DbConn<'_>,
-    id_column: C,
-    id: impl AsRef<str>,
-    entity: T,
-) -> AppResult<()>
-where
-    E: EntityTrait,
-    T: Into<E::Model>,
-    E::Model: IntoActiveModel<E::ActiveModel>,
-    E::ActiveModel: ActiveModelTrait<Entity = E>,
-    C: ColumnTrait,
-{
-    let model: E::Model = entity.into();
-    let active_model = model.into_active_model().reset_all();
-    E::update(active_model)
-        .filter(id_column.eq(id.as_ref().to_string()))
-        .exec(&db)
-        .await
-        .map_err(Internal.from_srcf())?;
-    Ok(())
-}
-
 async fn upsert<E, T, I1, I2, C1, C2>(
     db: DbConn<'_>,
     conflict_columns: I1,

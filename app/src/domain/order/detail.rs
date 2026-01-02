@@ -29,6 +29,7 @@ impl Detail {
     }
 }
 impl HasId for Detail {
+    type Entity = Self;
     fn id(&self) -> &crate::domain::Id<Self> {
         &self.id
     }

@@ -26,6 +26,7 @@ impl Order {
     }
 }
 impl HasId for Order {
+    type Entity = Self;
     fn id(&self) -> &crate::domain::Id<Self> {
         &self.id
     }

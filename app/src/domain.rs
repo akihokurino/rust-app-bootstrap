@@ -10,10 +10,6 @@ use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 
-pub trait HasId<T = Self>: Sized {
-    fn id(&self) -> &Id<T>;
-}
-
 #[derive(Debug, Ord, PartialOrd)]
 pub struct Id<E> {
     id: String,
@@ -97,13 +93,18 @@ fn generate_id_str() -> String {
     base_62::encode(&random::<[u8; 16]>())
 }
 
+pub trait HasId {
+    type Entity;
+    fn id(&self) -> &Id<Self::Entity>;
+}
+
 pub trait IntoIdMap<T> {
     fn into_id_map(self) -> HashMap<Id<T>, T>;
 }
 
 impl<T, I> IntoIdMap<T> for I
 where
-    T: HasId<T>,
+    T: HasId<Entity = T>,
     I: IntoIterator<Item = T>,
 {
     fn into_id_map(self) -> HashMap<Id<T>, T> {
