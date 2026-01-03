@@ -98,16 +98,16 @@ pub trait HasId {
     fn id(&self) -> &Id<Self::Entity>;
 }
 
-pub trait IntoIdMap<T> {
-    fn into_id_map(self) -> HashMap<Id<T>, T>;
+pub trait IntoIdMap<T, S> {
+    fn into_id_map(self) -> HashMap<Id<S>, T>;
 }
 
-impl<T, I> IntoIdMap<T> for I
+impl<T, I, S> IntoIdMap<T, S> for I
 where
-    T: HasId<Entity = T>,
+    T: HasId<Entity = S>,
     I: IntoIterator<Item = T>,
 {
-    fn into_id_map(self) -> HashMap<Id<T>, T> {
+    fn into_id_map(self) -> HashMap<Id<S>, T> {
         let mut map = HashMap::new();
         for item in self {
             map.insert(item.id().clone(), item);

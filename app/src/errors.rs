@@ -120,6 +120,30 @@ impl From<Kind> for AppError {
         }
     }
 }
+impl From<String> for AppError {
+    fn from(value: String) -> Self {
+        Self {
+            kind: Kind::Internal,
+            msg: Some(value),
+            src: None,
+        }
+    }
+}
+
+pub trait NotFoundToNone<T> {
+    fn not_found_to_none(self) -> Result<Option<T>, AppError>;
+}
+impl<T> NotFoundToNone<T> for Result<T, AppError> {
+    fn not_found_to_none(self) -> Result<Option<T>, AppError> {
+        match self {
+            Ok(v) => Ok(Some(v)),
+            Err(v) => match v.kind {
+                Kind::NotFound => Ok(None),
+                _ => Err(v),
+            },
+        }
+    }
+}
 
 macro_rules! impl_from_err_to_app_internal_err {
     ($T:ty) => {
