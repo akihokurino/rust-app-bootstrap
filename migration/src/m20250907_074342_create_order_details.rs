@@ -1,4 +1,4 @@
-use crate::m20250907_074340_create_table_users::Users;
+use crate::m20250907_074341_create_orders::Orders;
 use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
@@ -10,23 +10,25 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Orders::Table)
+                    .table(OrderDetails::Table)
                     .if_not_exists()
-                    .col(string(Orders::Id).primary_key())
-                    .col(string(Orders::UserId))
+                    .col(string(OrderDetails::Id).primary_key())
+                    .col(string(OrderDetails::OrderId))
+                    .col(string(OrderDetails::ProductName))
+                    .col(integer(OrderDetails::Quantity))
                     .col(
-                        timestamp_with_time_zone(Orders::CreatedAt)
+                        timestamp_with_time_zone(OrderDetails::CreatedAt)
                             .default(Expr::current_timestamp()),
                     )
                     .col(
-                        timestamp_with_time_zone(Orders::UpdatedAt)
+                        timestamp_with_time_zone(OrderDetails::UpdatedAt)
                             .default(Expr::current_timestamp()),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .name("fk_orders_user")
-                            .from(Orders::Table, Orders::UserId)
-                            .to(Users::Table, Users::Id),
+                            .name("fk_order_details_order")
+                            .from(OrderDetails::Table, OrderDetails::OrderId)
+                            .to(Orders::Table, Orders::Id),
                     )
                     .to_owned(),
             )
@@ -35,16 +37,18 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Orders::Table).to_owned())
+            .drop_table(Table::drop().table(OrderDetails::Table).to_owned())
             .await
     }
 }
 
 #[derive(DeriveIden)]
-pub enum Orders {
+enum OrderDetails {
     Table,
     Id,
-    UserId,
+    OrderId,
+    ProductName,
+    Quantity,
     CreatedAt,
     UpdatedAt,
 }
