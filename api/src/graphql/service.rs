@@ -54,8 +54,8 @@ impl HttpHandler {
             EmptySubscription,
         )
         .data(app.clone())
-        .data(data_loader::user::new_loader(app.clone()))
-        .data(data_loader::order::new_loader(app.clone()))
+        .data(data_loader::new_user_loader(app.clone()))
+        .data(data_loader::new_order_loader(app.clone()))
         .finish();
 
         HttpHandler {

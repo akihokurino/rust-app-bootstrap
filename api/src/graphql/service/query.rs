@@ -1,5 +1,4 @@
-use crate::graphql::data_loader::order::OrderDataLoader;
-use crate::graphql::data_loader::user::UserDataLoader;
+use crate::graphql::data_loader::{OrderDataLoader, UserDataLoader};
 use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::{Me, User};
 use crate::graphql::service::AppContext;
