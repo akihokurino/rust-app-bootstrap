@@ -2,6 +2,7 @@ use crate::graphql::data_loader::{OrderDataLoader, UserDataLoader};
 use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::{Me, User};
 use crate::graphql::service::AppContext;
+use crate::graphql::shared::types::{ItemPayload, ListPayload};
 use crate::graphql::GraphResult;
 use app::domain::types::image_size::ImageSize;
 use app::errors::Kind::BadRequest;
@@ -23,7 +24,7 @@ impl DefaultQuery {
         ctx: &Context<'_>,
         key: String,
         size: Option<ImageSize>,
-    ) -> GraphResult<String> {
+    ) -> GraphResult<ItemPayload<String>> {
         let _uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
         let asset_key = key.try_into().map_err(BadRequest.withf())?;
@@ -33,35 +34,35 @@ impl DefaultQuery {
             _ => app.storage.presign_for_get(&asset_key).await?,
         };
 
-        Ok(presign_url.to_string())
+        Ok(presign_url.to_string().into())
     }
 
-    async fn me(&self, ctx: &Context<'_>) -> GraphResult<Me> {
+    async fn me(&self, ctx: &Context<'_>) -> GraphResult<ItemPayload<Me>> {
         let uid = ctx.verified_user_id()?;
         let user_loader = ctx.data::<UserDataLoader>()?;
         let user = user_loader.load_one(uid).await?;
         let user = user.ok_or_else(|| BadRequest.with("user not found"))?;
-        Ok(user.into())
+        Ok(Me::from(user).into())
     }
 
-    async fn users(&self, ctx: &Context<'_>) -> GraphResult<Vec<User>> {
+    async fn users(&self, ctx: &Context<'_>) -> GraphResult<ListPayload<User>> {
         let app = ctx.data::<app::App>()?;
         let conn = app.db_session.conn();
         let users = app.user_repository.find(conn).await?;
-        Ok(users.into_iter().map(|v| v.into()).collect())
+        Ok(users.into_iter().map(User::from).collect::<Vec<_>>().into())
     }
 
-    async fn user(&self, ctx: &Context<'_>, id: ID) -> GraphResult<User> {
+    async fn user(&self, ctx: &Context<'_>, id: ID) -> GraphResult<ItemPayload<User>> {
         let user_loader = ctx.data::<UserDataLoader>()?;
         let user = user_loader.load_one(id.0.into()).await?;
         let user = user.ok_or_else(|| BadRequest.with("user not found"))?;
-        Ok(user.into())
+        Ok(User::from(user).into())
     }
 
-    async fn order(&self, ctx: &Context<'_>, id: ID) -> GraphResult<Order> {
+    async fn order(&self, ctx: &Context<'_>, id: ID) -> GraphResult<ItemPayload<Order>> {
         let order_loader = ctx.data::<OrderDataLoader>()?;
         let order = order_loader.load_one(id.0.into()).await?;
         let order = order.ok_or_else(|| BadRequest.with("order not found"))?;
-        Ok(order.into())
+        Ok(Order::from(order).into())
     }
 }

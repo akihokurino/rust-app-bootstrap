@@ -1,4 +1,5 @@
 use crate::graphql::admin::AppContext;
+use crate::graphql::shared::types::ItemPayload;
 use crate::graphql::GraphResult;
 use async_graphql::{Context, MergedObject, Object};
 
@@ -9,8 +10,8 @@ pub struct QueryRoot(DefaultQuery);
 pub struct DefaultQuery;
 #[Object]
 impl DefaultQuery {
-    async fn me(&self, ctx: &Context<'_>) -> GraphResult<String> {
+    async fn me(&self, ctx: &Context<'_>) -> GraphResult<ItemPayload<String>> {
         let uid = ctx.verified_user_id()?;
-        Ok(uid.into())
+        Ok(uid.to_string().into())
     }
 }

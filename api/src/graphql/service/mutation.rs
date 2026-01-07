@@ -2,7 +2,7 @@ use crate::graphql::service::types::order::Order;
 use crate::graphql::service::types::user::Me;
 use crate::graphql::service::AppContext;
 use crate::graphql::service::AppResult;
-use crate::graphql::shared::types::{BoolPayload, Date};
+use crate::graphql::shared::types::{BoolPayload, Date, ItemPayload};
 use crate::graphql::GraphResult;
 use app::domain;
 use app::domain::user::Gender;
@@ -78,7 +78,11 @@ impl DefaultMutation {
         Ok(true.into())
     }
 
-    async fn user_create(&self, ctx: &Context<'_>, input: UserCreateInput) -> GraphResult<Me> {
+    async fn user_create(
+        &self,
+        ctx: &Context<'_>,
+        input: UserCreateInput,
+    ) -> GraphResult<ItemPayload<Me>> {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
@@ -93,10 +97,14 @@ impl DefaultMutation {
         app.user_repository.insert(tx.conn(), user.clone()).await?;
         tx.commit().await?;
 
-        Ok(user.into())
+        Ok(Me::from(user).into())
     }
 
-    async fn user_update(&self, ctx: &Context<'_>, input: UserUpdateInput) -> GraphResult<Me> {
+    async fn user_update(
+        &self,
+        ctx: &Context<'_>,
+        input: UserUpdateInput,
+    ) -> GraphResult<ItemPayload<Me>> {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
@@ -110,7 +118,7 @@ impl DefaultMutation {
         app.user_repository.update(tx.conn(), user.clone()).await?;
         tx.commit().await?;
 
-        Ok(user.into())
+        Ok(Me::from(user).into())
     }
 
     async fn user_delete(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
@@ -125,7 +133,11 @@ impl DefaultMutation {
         Ok(true.into())
     }
 
-    async fn order_create(&self, ctx: &Context<'_>, input: OrderCreateInput) -> GraphResult<Order> {
+    async fn order_create(
+        &self,
+        ctx: &Context<'_>,
+        input: OrderCreateInput,
+    ) -> GraphResult<ItemPayload<Order>> {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
@@ -156,7 +168,7 @@ impl DefaultMutation {
         }
         tx.commit().await?;
 
-        Ok(order.into())
+        Ok(Order::from(order).into())
     }
 }
 
