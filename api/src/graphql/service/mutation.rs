@@ -1,8 +1,8 @@
-use crate::graphql::service::types::order::Order;
-use crate::graphql::service::types::user::Me;
+use crate::graphql::service::types::order::{Order, OrderPayload};
+use crate::graphql::service::types::user::{Me, MePayload};
 use crate::graphql::service::AppContext;
 use crate::graphql::service::AppResult;
-use crate::graphql::shared::types::{BoolPayload, Date, ItemPayload};
+use crate::graphql::shared::types::{BoolPayload, Date};
 use crate::graphql::GraphResult;
 use app::domain;
 use app::domain::user::Gender;
@@ -82,7 +82,7 @@ impl DefaultMutation {
         &self,
         ctx: &Context<'_>,
         input: UserCreateInput,
-    ) -> GraphResult<ItemPayload<Me>> {
+    ) -> GraphResult<MePayload> {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
@@ -104,7 +104,7 @@ impl DefaultMutation {
         &self,
         ctx: &Context<'_>,
         input: UserUpdateInput,
-    ) -> GraphResult<ItemPayload<Me>> {
+    ) -> GraphResult<MePayload> {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 
@@ -137,7 +137,7 @@ impl DefaultMutation {
         &self,
         ctx: &Context<'_>,
         input: OrderCreateInput,
-    ) -> GraphResult<ItemPayload<Order>> {
+    ) -> GraphResult<OrderPayload> {
         let uid = ctx.verified_user_id()?;
         let app = ctx.data::<app::App>()?;
 

@@ -62,3 +62,7 @@ impl User {
         self.0.updated_at.into()
     }
 }
+
+crate::define_item_payload!(MePayload, Me);
+crate::define_list_payload!(UserListPayload, User);
+crate::define_item_payload!(UserPayload, User);

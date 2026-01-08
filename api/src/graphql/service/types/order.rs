@@ -73,3 +73,5 @@ impl OrderDetail {
         self.0.updated_at.into()
     }
 }
+
+crate::define_item_payload!(OrderPayload, Order);
