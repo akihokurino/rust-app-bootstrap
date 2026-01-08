@@ -114,4 +114,20 @@ impl Storage for Adapter {
         }
         Ok(())
     }
+
+    async fn delete_object(&self, key: &AssetKey) -> AppResult<()> {
+        let res = self
+            .client
+            .delete_object()
+            .bucket(self.default_bucket.clone())
+            .key(key.to_string().as_str())
+            .send()
+            .await;
+
+        match res {
+            Err(e) => return Err(Internal.from_src(e)),
+            _ => {}
+        }
+        Ok(())
+    }
 }

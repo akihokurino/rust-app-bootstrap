@@ -19,6 +19,7 @@ pub trait Storage: Send + Sync {
     async fn download_object(&self, key: &AssetKey) -> AppResult<Bytes>;
     async fn head_object(&self, key: &AssetKey) -> AppResult<HeadObjectResponse>;
     async fn copy_object(&self, src_key: &AssetKey, dest_key: &AssetKey) -> AppResult<()>;
+    async fn delete_object(&self, key: &AssetKey) -> AppResult<()>;
 }
 
 #[async_trait]
