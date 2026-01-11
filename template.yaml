@@ -92,7 +92,7 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
-        - AmazonDynamoDBFullAccess
+        - AmazonSESFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
         - AmazonCognitoPowerUser
@@ -156,7 +156,7 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
-        - AmazonDynamoDBFullAccess
+        - AmazonSESFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
         - AmazonCognitoPowerUser
@@ -182,7 +182,7 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
-        - AmazonDynamoDBFullAccess
+        - AmazonSESFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
         - AmazonCognitoPowerUser
@@ -200,7 +200,7 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
-        - AmazonDynamoDBFullAccess
+        - AmazonSESFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
         - AmazonCognitoPowerUser
@@ -223,7 +223,7 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - AmazonSSMReadOnlyAccess
-        - AmazonDynamoDBFullAccess
+        - AmazonSESFullAccess
         - AmazonS3FullAccess
         - AmazonSNSFullAccess
         - AmazonCognitoPowerUser
