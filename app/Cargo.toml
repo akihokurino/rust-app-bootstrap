@@ -20,6 +20,7 @@ aws-sdk-lambda = "1.112"
 aws-sdk-sns = "1.92"
 aws-sdk-sqs = "1.91"
 aws-sdk-cognitoidentityprovider = "1.105"
+aws-sdk-sesv2 = "1.110"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dotenv-parser = "0.1"

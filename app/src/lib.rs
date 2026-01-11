@@ -1,5 +1,5 @@
 use crate::adapter::{
-    AdminAuth, DBSession, ImageCdn, RemoteFunction, Storage, TaskQueue, UserAuth,
+    AdminAuth, DBSession, ImageCdn, Mail, RemoteFunction, Storage, TaskQueue, UserAuth,
 };
 use crate::domain::order::detail::OrderDetailRepository;
 use crate::domain::order::OrderRepository;
@@ -30,6 +30,7 @@ pub type AppResult<T> = Result<T, AppError>;
 pub struct App {
     pub env: env::Env,
     pub storage: Arc<dyn Storage>,
+    pub mail: Arc<dyn Mail>,
     pub admin_auth: Arc<dyn AdminAuth>,
     pub sns_task_queue: Arc<dyn TaskQueue>,
     pub sqs_task_queue: Arc<dyn TaskQueue>,
@@ -75,6 +76,10 @@ pub async fn app() -> AppResult<&'static App> {
     let storage: Arc<dyn Storage> = Arc::new(s3::Adapter::new(
         aws_sdk_s3::Client::new(&aws_config),
         envs.s3_bucket_name.clone(),
+    ));
+    let mail: Arc<dyn Mail> = Arc::new(infra::ses::Adapter::new(
+        aws_sdk_sesv2::Client::new(&aws_config),
+        &envs.from_email_address,
     ));
     let admin_auth: Arc<dyn AdminAuth> = Arc::new(cognito::Adapter::new(
         aws_sdk_cognitoidentityprovider::Client::new(&aws_config),
@@ -161,6 +166,7 @@ pub async fn app() -> AppResult<&'static App> {
     let app = App {
         env: envs,
         storage,
+        mail,
         admin_auth,
         sns_task_queue,
         sqs_task_queue,

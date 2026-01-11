@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DNSName:
+    Type: String
+    Default: 'dev.akiho.app'
+    Description: 'Base domain name for the application'
+
+Resources:
+  EmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref DNSName
+      DkimAttributes:
+        SigningEnabled: true
+
+Outputs:
+  DkimDNSTokenName1:
+    Description: 'DKIM DNS Token Name 1'
+    Value: !GetAtt EmailIdentity.DkimDNSTokenName1
+    Export:
+      Name: !Sub '${AWS::StackName}-DkimDNSTokenName1'
+  DkimDNSTokenValue1:
+    Description: 'DKIM DNS Token Value 1'
+    Value: !GetAtt EmailIdentity.DkimDNSTokenValue1
+    Export:
+      Name: !Sub '${AWS::StackName}-DkimDNSTokenValue1'
+  DkimDNSTokenName2:
+    Description: 'DKIM DNS Token Name 2'
+    Value: !GetAtt EmailIdentity.DkimDNSTokenName2
+    Export:
+      Name: !Sub '${AWS::StackName}-DkimDNSTokenName2'
+  DkimDNSTokenValue2:
+    Description: 'DKIM DNS Token Value 2'
+    Value: !GetAtt EmailIdentity.DkimDNSTokenValue2
+    Export:
+      Name: !Sub '${AWS::StackName}-DkimDNSTokenValue2'
+  DkimDNSTokenName3:
+    Description: 'DKIM DNS Token Name 3'
+    Value: !GetAtt EmailIdentity.DkimDNSTokenName3
+    Export:
+      Name: !Sub '${AWS::StackName}-DkimDNSTokenName3'
+  DkimDNSTokenValue3:
+    Description: 'DKIM DNS Token Value 3'
+    Value: !GetAtt EmailIdentity.DkimDNSTokenValue3
+    Export:
+      Name: !Sub '${AWS::StackName}-DkimDNSTokenValue3'

@@ -371,6 +371,7 @@ dependencies = [
  "aws-sdk-cognitoidentityprovider",
  "aws-sdk-lambda",
  "aws-sdk-s3",
+ "aws-sdk-sesv2",
  "aws-sdk-sns",
  "aws-sdk-sqs",
  "aws-sdk-ssm",
@@ -775,6 +776,28 @@ dependencies = [
  "sha2",
  "tracing",
  "url 2.5.7",
+]
+
+[[package]]
+name = "aws-sdk-sesv2"
+version = "1.110.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4d66e803366fd4342170a7d982025e54cc66ecdf2ac8368e97d590ee06bc528"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "fastrand",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
 ]
 
 [[package]]

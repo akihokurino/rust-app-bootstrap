@@ -36,6 +36,10 @@ Parameters:
     Type: String
     Default: 'cloudfront'
     Description: 'Name of the CloudFront stack'
+  Route53StackName:
+    Type: String
+    Default: 'route53'
+    Description: 'Name of the Route53 stack'
 
 Globals:
   Function:
@@ -99,10 +103,39 @@ Resources:
     Metadata:
       BuildMethod: makefile
 
+  ApiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName:
+        Fn::Sub:
+          - 'api.${BaseDomainName}'
+          - BaseDomainName:
+              Fn::ImportValue: !Sub '${Route53StackName}-DNSName'
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName:
+            Fn::Sub:
+              - 'api.${BaseDomainName}'
+              - BaseDomainName:
+                  Fn::ImportValue: !Sub '${Route53StackName}-DNSName'
+          HostedZoneId:
+            Fn::ImportValue: !Sub '${Route53StackName}-HostedZoneId'
+
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       StageName: api
+      Domain:
+        EndpointConfiguration: REGIONAL
+        DomainName:
+          Fn::Sub:
+            - 'api.${BaseDomainName}'
+            - BaseDomainName:
+                Fn::ImportValue: !Sub '${Route53StackName}-DNSName'
+        Route53:
+          HostedZoneId:
+            Fn::ImportValue: !Sub '${Route53StackName}-HostedZoneId'
+        CertificateArn: !Ref ApiCertificate
       BinaryMediaTypes:
         - "*/*"
 

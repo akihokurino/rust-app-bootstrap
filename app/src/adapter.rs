@@ -180,3 +180,8 @@ impl UserPrincipal {
 pub trait ImageCdn: Send + Sync {
     async fn presign_for_get(&self, key: &AssetKey, size: ImageSize) -> AppResult<Uri>;
 }
+
+#[async_trait]
+pub trait Mail: Send + Sync {
+    async fn send_text(&self, to: Email, subject: &str, text: &str) -> AppResult<()>;
+}

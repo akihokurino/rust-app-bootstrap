@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Route53 Hosted Zone'
+
+Parameters:
+  DNSName:
+    Type: String
+    Description: 'DNS Name'
+    Default: dev.akiho.app
+  SESStackName:
+    Type: String
+    Description: 'SES Stack Name'
+    Default: ses
+
+Resources:
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref DNSName
+
+  DkimCNAMERecord1:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name:
+        Fn::ImportValue: !Sub '${SESStackName}-DkimDNSTokenName1'
+      Type: CNAME
+      TTL: 300
+      ResourceRecords:
+        - Fn::ImportValue: !Sub '${SESStackName}-DkimDNSTokenValue1'
+  DkimCNAMERecord2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name:
+        Fn::ImportValue: !Sub '${SESStackName}-DkimDNSTokenName2'
+      Type: CNAME
+      TTL: 300
+      ResourceRecords:
+        - Fn::ImportValue: !Sub '${SESStackName}-DkimDNSTokenValue2'
+  DkimCNAMERecord3:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name:
+        Fn::ImportValue: !Sub '${SESStackName}-DkimDNSTokenName3'
+      Type: CNAME
+      TTL: 300
+      ResourceRecords:
+        - Fn::ImportValue: !Sub '${SESStackName}-DkimDNSTokenValue3'
+
+Outputs:
+  HostedZoneId:
+    Description: 'Hosted Zone ID'
+    Value: !Ref HostedZone
+    Export:
+      Name: !Sub '${AWS::StackName}-HostedZoneId'
+  DNSName:
+    Description: 'DNS Name'
+    Value: !Ref DNSName
+    Export:
+      Name: !Sub '${AWS::StackName}-DNSName'
+  NameServers:
+    Description: 'Name Servers for delegation'
+    Value: !Join [ ',', !GetAtt HostedZone.NameServers ]

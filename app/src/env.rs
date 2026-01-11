@@ -13,6 +13,7 @@ pub struct Env {
     pub with_lambda: bool,
     pub database_url: String,
     pub s3_bucket_name: String,
+    pub from_email_address: String,
     pub sns_async_task_topic_arn: String,
     pub sqs_async_task_queue_url: String,
     pub sync_task_lambda_arn: String,
@@ -50,6 +51,7 @@ impl Env {
                 .unwrap_or(false),
             database_url: must_env("DATABASE_URL"),
             s3_bucket_name: must_env("S3_BUCKET_NAME"),
+            from_email_address: must_env("FROM_EMAIL_ADDRESS"),
             sns_async_task_topic_arn: must_env("SNS_ASYNC_TASK_TOPIC_ARN"),
             sqs_async_task_queue_url: must_env("SQS_ASYNC_TASK_QUEUE_URL"),
             sync_task_lambda_arn: std::env::var("SYNC_TASK_LAMBDA_ARN").unwrap_or("".to_string()), // TODO: input target lambda arn
