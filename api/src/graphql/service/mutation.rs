@@ -42,7 +42,7 @@ impl DefaultMutation {
 
     async fn call_async_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
         let app = ctx.data::<app::App>()?;
-        let payload = app::domain::types::task::AsyncTaskPayload {
+        let payload = domain::types::task::AsyncTaskPayload {
             name: "My Async Task".to_string(),
         };
         app.sns_task_queue
@@ -62,7 +62,7 @@ impl DefaultMutation {
 
     async fn call_sync_task(&self, ctx: &Context<'_>) -> GraphResult<BoolPayload> {
         let app = ctx.data::<app::App>()?;
-        let payload = app::domain::types::task::SyncTaskPayload {
+        let payload = domain::types::task::SyncTaskPayload {
             name: "My Sync Task".to_string(),
         };
         let resp_value = app
@@ -72,9 +72,9 @@ impl DefaultMutation {
                 app.env.sync_task_lambda_arn.clone(),
             )
             .await?;
-        let resp: app::domain::types::task::SyncTaskResponse =
+        let resp: domain::types::task::SyncTaskResponse =
             serde_json::from_value(resp_value).map_err(Internal.from_srcf())?;
-        println!("Sync task response: {:?}", resp);
+        tracing::info!("Sync task response: {:?}", resp);
         Ok(true.into())
     }
 

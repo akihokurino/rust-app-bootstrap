@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 async-trait = "0.1"
 tokio = { version = "1.48", features = ["full"] }
+tracing = { version = "0.1", features = [] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 sea-orm = { version = "1.1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-json", "with-uuid"] }
 derive_more = { version = "2.1", features = ["full"] }
 base-62 = "0.1"
@@ -27,8 +29,6 @@ dotenv-parser = "0.1"
 bytes = "1.11"
 email_address = "0.2"
 http = "1.4"
-tracing = { version = "0.1", features = [] }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 atty = "0.2"
 async-graphql = "7.0"
 jsonwebtoken = { version = "10.2", features = ["aws_lc_rs"] }

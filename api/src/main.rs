@@ -62,12 +62,12 @@ async fn main() -> std::io::Result<()> {
     };
 
     if app.env.with_lambda {
-        println!("listen as lambda function");
+        tracing::info!("listen as lambda function");
         lambda_web::run_actix_on_lambda(app_factory)
             .await
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
     } else {
-        println!("listen as http server on port {}", port);
+        tracing::info!("listen as http server on port {}", port);
         HttpServer::new(app_factory)
             .bind(format!("127.0.0.1:{}", port))?
             .run()

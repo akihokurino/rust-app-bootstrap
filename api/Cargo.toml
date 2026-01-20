@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 app = { path = "../app" }
 tokio = { version = "1.48", features = ["full"] }
+tracing = { version = "0.1", features = [] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 async-trait = "0.1"
 actix-web = "4.12"
 async-graphql = { version = "7.0", features = ["dataloader", "log"] }

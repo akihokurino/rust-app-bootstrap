@@ -358,6 +358,8 @@ dependencies = [
  "rand 0.10.0-rc.5",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -564,6 +566,8 @@ dependencies = [
  "lambda_runtime 1.0.1",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -575,6 +579,8 @@ dependencies = [
  "lambda_runtime 1.0.1",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -1250,6 +1256,8 @@ dependencies = [
  "lambda_runtime 1.0.1",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -4980,6 +4988,8 @@ dependencies = [
  "app",
  "lambda_runtime 1.0.1",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

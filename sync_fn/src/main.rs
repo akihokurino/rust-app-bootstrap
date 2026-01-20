@@ -28,7 +28,9 @@ async fn exec(payload: SyncTaskPayload) -> AppResult<SyncTaskResponse> {
         }
     };
 
-    println!("Task name: {}", payload.name);
+    app::init_log();
+
+    tracing::info!("Task name: {}", payload.name);
 
     Ok(SyncTaskResponse { name: payload.name })
 }

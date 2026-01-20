@@ -25,7 +25,9 @@ async fn exec(payload: Value) -> AppResult<()> {
         }
     };
 
-    println!("Batch task started with payload: {:?}", payload);
+    app::init_log();
+
+    tracing::info!("Batch task started with payload: {:?}", payload);
 
     Ok(())
 }
