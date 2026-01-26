@@ -1,11 +1,13 @@
 use crate::adapter::{
-    AdminAuth, DBSession, ImageCdn, Mail, RemoteFunction, Storage, TaskQueue, UserAuth,
+    AdminAuth, DBSession, ErrorNotifier, ImageCdn, Mail, RemoteFunction, Storage, TaskQueue,
+    UserAuth,
 };
 use crate::domain::order::detail::OrderDetailRepository;
 use crate::domain::order::OrderRepository;
 use crate::domain::user::UserRepository;
 use crate::errors::AppError;
 use crate::errors::Kind::Internal;
+use crate::infra::sentry as sentry_adapter;
 use crate::infra::{cloudfront, cognito, firebase, ssm};
 use aws_config::BehaviorVersion;
 use google_fcm1::{hyper, hyper_rustls};
@@ -15,6 +17,8 @@ use infra::rdb::{repository, session_manager};
 use infra::{lambda, s3, sns, sqs};
 #[allow(unused)]
 use once_cell;
+use sentry::types::Dsn;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
 
@@ -31,6 +35,7 @@ pub struct App {
     pub env: env::Env,
     pub storage: Arc<dyn Storage>,
     pub mail: Arc<dyn Mail>,
+    pub error_notifier: Arc<dyn ErrorNotifier>,
     pub admin_auth: Arc<dyn AdminAuth>,
     pub sns_task_queue: Arc<dyn TaskQueue>,
     pub sqs_task_queue: Arc<dyn TaskQueue>,
@@ -81,6 +86,15 @@ pub async fn app() -> AppResult<&'static App> {
         aws_sdk_sesv2::Client::new(&aws_config),
         &envs.from_email_address,
     ));
+    let error_notifier: Arc<dyn ErrorNotifier> = Arc::new(sentry_adapter::Adapter::new(
+        ::sentry::Client::from_config(::sentry::apply_defaults(::sentry::ClientOptions {
+            dsn: Some(Dsn::from_str(envs.sentry_dsn.as_str()).map_err(Internal.from_srcf())?),
+            transport: Some(Arc::new(::sentry::transports::DefaultTransportFactory)),
+            ..Default::default()
+        })),
+        env::Env::is_local(),
+    ));
+    adapter::set_global_error_notifier(error_notifier.clone());
     let admin_auth: Arc<dyn AdminAuth> = Arc::new(cognito::Adapter::new(
         aws_sdk_cognitoidentityprovider::Client::new(&aws_config),
         envs.cognito_admin_user_pool_id.clone(),
@@ -167,6 +181,7 @@ pub async fn app() -> AppResult<&'static App> {
         env: envs,
         storage,
         mail,
+        error_notifier,
         admin_auth,
         sns_task_queue,
         sqs_task_queue,

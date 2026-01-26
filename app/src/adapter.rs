@@ -2,15 +2,19 @@ use crate::domain::admin_user;
 use crate::domain::types::asset_key::AssetKey;
 use crate::domain::types::email::Email;
 use crate::domain::types::image_size::ImageSize;
+use crate::errors::AppError;
 pub use crate::infra::rdb::session_manager::TransactionGuard;
 pub use crate::infra::s3::types::HeadObjectResponse;
+pub use crate::infra::sentry::InitGuard as ErrorNotifierGuard;
 use crate::{domain, AppResult};
 use async_trait::async_trait;
 use bytes::Bytes;
 use http::Uri;
+use once_cell::sync::OnceCell;
 pub use sea_orm::DatabaseConnection;
 use serde::Serialize;
 use std::future::Future;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait Storage: Send + Sync {
@@ -184,4 +188,21 @@ pub trait ImageCdn: Send + Sync {
 #[async_trait]
 pub trait Mail: Send + Sync {
     async fn send_text(&self, to: Email, subject: &str, text: &str) -> AppResult<()>;
+}
+
+pub trait ErrorNotifier: Send + Sync {
+    fn init(&self) -> ErrorNotifierGuard;
+    fn send(&self, err: AppError);
+}
+
+static GLOBAL_ERROR_NOTIFIER: OnceCell<Arc<dyn ErrorNotifier>> = OnceCell::new();
+
+pub fn set_global_error_notifier(notifier: Arc<dyn ErrorNotifier>) {
+    let _ = GLOBAL_ERROR_NOTIFIER.set(notifier);
+}
+
+pub fn notify_error(err: &AppError) {
+    if let Some(notifier) = GLOBAL_ERROR_NOTIFIER.get() {
+        notifier.send(err.clone());
+    }
 }

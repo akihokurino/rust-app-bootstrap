@@ -1,4 +1,3 @@
-mod errors;
 pub mod types;
 
 use crate::adapter::Storage;
@@ -7,7 +6,8 @@ use crate::errors::Kind::*;
 use crate::infra::s3::types::HeadObjectResponse;
 use crate::AppResult;
 use async_trait::async_trait;
-use aws_sdk_s3::error::*;
+use aws_sdk_s3::error::SdkError;
+use aws_sdk_s3::operation::get_object::GetObjectError;
 use aws_sdk_s3::presigning::PresigningConfig;
 use aws_sdk_s3::Client;
 use bytes::Bytes;
@@ -39,7 +39,8 @@ impl Storage for Adapter {
             .bucket(self.default_bucket.clone())
             .key(key.to_string().as_str())
             .presigned(PresigningConfig::expires_in(expires_in).unwrap())
-            .await?;
+            .await
+            .map_err(Internal.from_srcf())?;
         Ok(pre_signed
             .uri()
             .to_owned()
@@ -55,7 +56,8 @@ impl Storage for Adapter {
             .bucket(self.default_bucket.clone())
             .key(key.to_string().as_str())
             .presigned(PresigningConfig::expires_in(expires_in).unwrap())
-            .await?;
+            .await
+            .map_err(Internal.from_srcf())?;
         Ok(pre_signed
             .uri()
             .to_owned()
@@ -70,7 +72,11 @@ impl Storage for Adapter {
             .bucket(self.default_bucket.clone())
             .key(key.to_string().as_str())
             .send()
-            .await?;
+            .await
+            .map_err(|e: SdkError<GetObjectError>| match &e {
+                SdkError::ServiceError(v) if v.err().is_no_such_key() => NotFound.default(),
+                _ => Internal.from_src(e),
+            })?;
         let data = resp.body.collect().await;
         Ok(data.unwrap().into_bytes())
     }

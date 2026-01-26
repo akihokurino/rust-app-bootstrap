@@ -5,6 +5,7 @@ pub mod lambda;
 pub mod log;
 pub mod rdb;
 pub mod s3;
+pub mod sentry;
 pub mod ses;
 pub mod sns;
 pub mod sqs;

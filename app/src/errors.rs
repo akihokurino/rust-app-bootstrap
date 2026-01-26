@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
+use std::panic::Location;
 use std::sync::Arc;
 
 use derive_more::Display;
@@ -14,6 +15,7 @@ pub enum Kind {
 }
 
 impl Kind {
+    #[track_caller]
     pub fn default(self) -> AppError {
         let msg = match self {
             Kind::BadRequest => "不正なリクエストです",
@@ -28,39 +30,61 @@ impl Kind {
             kind: self,
             msg: Some(msg.to_string()),
             src: None,
+            location: Location::caller(),
         }
     }
 
+    #[track_caller]
     pub fn with(self, msg: impl Into<String>) -> AppError {
         AppError {
             kind: self,
             msg: Some(msg.into()),
             src: None,
+            location: Location::caller(),
         }
     }
 
     #[inline]
+    #[track_caller]
     pub fn withf<T>(self) -> impl FnOnce(T) -> AppError
     where
         T: Into<String>,
     {
-        move |v| self.with(v)
+        let location = Location::caller();
+        move |v| AppError {
+            kind: self,
+            msg: Some(v.into()),
+            src: None,
+            location,
+        }
     }
+
+    #[track_caller]
     pub fn from_src(self, src: impl std::error::Error + Send + Sync + 'static) -> AppError {
         AppError {
             kind: self,
             msg: None,
             src: Some(Arc::from(src)),
+            location: Location::caller(),
         }
     }
 
     #[inline]
+    #[track_caller]
     pub fn from_srcf<T>(self) -> impl FnOnce(T) -> AppError
     where
         T: std::error::Error + Send + Sync + 'static,
     {
-        move |v| self.from_src(v)
+        let location = Location::caller();
+        move |v| AppError {
+            kind: self,
+            msg: None,
+            src: Some(Arc::from(v)),
+            location,
+        }
     }
+
+    #[track_caller]
     pub fn into_err(self) -> AppError {
         self.into()
     }
@@ -71,8 +95,10 @@ pub struct AppError {
     pub kind: Kind,
     pub msg: Option<String>,
     pub src: Option<Arc<dyn std::error::Error + Send + Sync>>,
+    pub location: &'static Location<'static>,
 }
 impl AppError {
+    #[track_caller]
     pub fn with_src(self, src: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self {
             src: Some(Arc::from(src)),
@@ -80,6 +106,7 @@ impl AppError {
         }
     }
 
+    #[track_caller]
     pub fn with_box_src(self, src: Box<dyn std::error::Error + Send + Sync + 'static>) -> Self {
         Self {
             src: Some(Arc::from(src)),
@@ -112,20 +139,24 @@ impl std::error::Error for AppError {
     }
 }
 impl From<Kind> for AppError {
+    #[track_caller]
     fn from(kind: Kind) -> Self {
         Self {
             kind,
             msg: None,
             src: None,
+            location: Location::caller(),
         }
     }
 }
 impl From<String> for AppError {
+    #[track_caller]
     fn from(value: String) -> Self {
         Self {
             kind: Kind::Internal,
             msg: Some(value),
             src: None,
+            location: Location::caller(),
         }
     }
 }
@@ -145,13 +176,3 @@ impl<T> NotFoundToNone<T> for Result<T, AppError> {
     }
 }
 
-macro_rules! impl_from_err_to_app_internal_err {
-    ($T:ty) => {
-        impl From<$T> for crate::errors::AppError {
-            fn from(v: $T) -> Self {
-                crate::errors::Kind::Internal.from_src(v)
-            }
-        }
-    };
-}
-pub(crate) use impl_from_err_to_app_internal_err;

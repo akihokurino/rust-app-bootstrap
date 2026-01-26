@@ -1,3 +1,4 @@
+use app::adapter::notify_error;
 use app::errors::AppError;
 use app::errors::Kind::*;
 use async_graphql::{ErrorExtensions, FieldError};
@@ -13,8 +14,19 @@ pub enum Error {
 impl Into<FieldError> for Error {
     fn into(self) -> FieldError {
         let err = match self {
-            Error::App(v) => v,
-            Error::Field(v) => Internal.from_src(FieldStdErr(v)),
+            Error::App(v) => {
+                if v.kind == Internal {
+                    tracing::error!("{:?}", v);
+                    notify_error(&v);
+                }
+                v
+            }
+            Error::Field(v) => {
+                tracing::error!("{:?}", v);
+                let err = Internal.from_src(FieldStdErr(v));
+                notify_error(&err);
+                err
+            }
         };
 
         let mut ferr = FieldError::new(match err.kind {

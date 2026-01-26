@@ -1,10 +1,11 @@
-mod errors;
 mod types;
 
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use async_graphql::async_trait::async_trait;
+use aws_sdk_cognitoidentityprovider::error::SdkError;
+use aws_sdk_cognitoidentityprovider::operation::admin_get_user::AdminGetUserError;
 use aws_sdk_cognitoidentityprovider::types::AttributeType;
 use jsonwebtoken::{DecodingKey, Validation};
 
@@ -90,7 +91,13 @@ impl AdminAuth for Adapter {
             .user_pool_id(self.user_pool_id.clone())
             .username(id.as_str().to_string())
             .send()
-            .await?;
+            .await
+            .map_err(|e: SdkError<AdminGetUserError>| match &e {
+                SdkError::ServiceError(v) if v.err().is_user_not_found_exception() => {
+                    NotFound.default()
+                }
+                _ => Internal.from_src(e),
+            })?;
 
         let username = response.username().to_string();
         let attrs = response.user_attributes.unwrap_or_default();

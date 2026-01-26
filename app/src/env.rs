@@ -27,6 +27,8 @@ pub struct Env {
     pub cloudfront_domain: Option<String>,
     pub cloudfront_key_pair_id: Option<String>,
     pub cloudfront_private_key: Option<String>,
+
+    pub sentry_dsn: String,
 }
 impl Env {
     pub fn new() -> Self {
@@ -65,6 +67,8 @@ impl Env {
             cloudfront_domain: std::env::var("CLOUDFRONT_DOMAIN").ok(),
             cloudfront_key_pair_id: std::env::var("CLOUDFRONT_KEY_PAIR_ID").ok(),
             cloudfront_private_key: std::env::var("CLOUDFRONT_PRIVATE_KEY").ok(),
+
+            sentry_dsn: must_env("SENTRY_DSN"),
         }
     }
 

@@ -17,6 +17,7 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    let _sentry = app.error_notifier.init();
     app::init_log();
 
     let user_api_handler = graphql::service::HttpHandler::new(app.clone()).await;

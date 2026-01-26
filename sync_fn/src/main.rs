@@ -11,24 +11,30 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn bridge(event: LambdaEvent<SyncTaskPayload>) -> Result<SyncTaskResponse, Error> {
-    let (request, _context) = event.into_parts();
-    let result = exec(request).await;
-
-    match result {
-        Ok(response) => Ok(response),
-        Err(err) => Err(anyhow!(err).into()),
-    }
-}
-
-async fn exec(payload: SyncTaskPayload) -> AppResult<SyncTaskResponse> {
-    let _app = match app::app().await {
+    let app = match app::app().await {
         Ok(res) => res,
         Err(err) => {
             panic!("Failed to initialize app: {:?}", err);
         }
     };
 
+    let _sentry = app.error_notifier.init();
     app::init_log();
+
+    let (request, _context) = event.into_parts();
+    let result = exec(app, request).await;
+
+    match result {
+        Ok(response) => Ok(response),
+        Err(err) => {
+            tracing::error!("{:?}", err);
+            app.error_notifier.send(err.clone());
+            Err(anyhow!(err).into())
+        }
+    }
+}
+
+async fn exec(_app: &app::App, payload: SyncTaskPayload) -> AppResult<SyncTaskResponse> {
 
     tracing::info!("Task name: {}", payload.name);
 

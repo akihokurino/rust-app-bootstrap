@@ -13,21 +13,25 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn bridge(event: LambdaEvent<Value>) -> Result<(), Error> {
-    if let Err(err) = exec(event.payload).await {
-        return Err(anyhow!(err).into());
-    }
-    Ok(())
-}
-
-async fn exec(payload: Value) -> AppResult<()> {
-    let _app = match app::app().await {
+    let app = match app::app().await {
         Ok(res) => res,
         Err(err) => {
             panic!("Failed to initialize app: {:?}", err);
         }
     };
 
+    let _sentry = app.error_notifier.init();
     app::init_log();
+
+    if let Err(err) = exec(app, event.payload).await {
+        tracing::error!("{:?}", err);
+        app.error_notifier.send(err.clone());
+        return Err(anyhow!(err).into());
+    }
+    Ok(())
+}
+
+async fn exec(_app: &app::App, payload: Value) -> AppResult<()> {
 
     let data: SnsEventData = serde_json::from_value(payload)
         .map_err(|e| BadRequest.with("failed to parse payload").with_src(e))?;
