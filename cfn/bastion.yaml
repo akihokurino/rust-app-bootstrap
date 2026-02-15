@@ -5,18 +5,45 @@ Parameters:
     Default: 'network'
 
 Resources:
+  BastionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: bastion-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  BastionInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: bastion-instance-profile
+      Roles:
+        - !Ref BastionRole
+
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t3.nano
       ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      IamInstanceProfile: !Ref BastionInstanceProfile
       SubnetId:
         Fn::ImportValue: !Sub '${NetworkStackName}-PublicSubnet1Id'
       SecurityGroupIds:
         - Fn::ImportValue: !Sub '${NetworkStackName}-BastionSecurityGroupId'
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          systemctl enable amazon-ssm-agent
+          systemctl start amazon-ssm-agent
       Tags:
         - Key: Name
-          Value: bastion
+          Value: 'bastion'
 
 Outputs:
   BastionInstanceId:

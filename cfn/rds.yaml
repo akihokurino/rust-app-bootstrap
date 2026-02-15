@@ -85,9 +85,3 @@ Outputs:
     Value: !GetAtt PostgreSQLDatabase.Endpoint.Port
     Export:
       Name: !Sub '${AWS::StackName}-DatabasePort'
-
-  ConnectionString:
-    Description: 'PostgreSQL Connection String'
-    Value: !Sub 'postgresql://postgres:${DBPassword}@${PostgreSQLDatabase.Endpoint.Address}:${PostgreSQLDatabase.Endpoint.Port}/app'
-    Export:
-      Name: !Sub '${AWS::StackName}-ConnectionString'

@@ -12,10 +12,6 @@ Parameters:
     Type: String
     Default: 'network'
     Description: 'Name of the network stack'
-  RDSStackName:
-    Type: String
-    Default: 'rds'
-    Description: 'Name of the RDS stack'
   S3StackName:
     Type: String
     Default: 's3'
@@ -56,8 +52,6 @@ Globals:
       Variables:
         WITH_LAMBDA: "true"
         SSM_DOTENV_PARAMETER_NAME: !Ref SSMParameterName
-        DATABASE_URL:
-          Fn::ImportValue: !Sub '${RDSStackName}-ConnectionString'
         S3_BUCKET_NAME:
           Fn::ImportValue: !Sub '${S3StackName}-S3BucketName'
         SNS_ASYNC_TASK_TOPIC_ARN:

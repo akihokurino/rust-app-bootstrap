@@ -1,136 +1,105 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Aurora PostgreSQL for development and production environments'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Aurora PostgreSQL for development and production environments"
 
 Parameters:
   NetworkStackName:
     Type: String
-    Default: 'network'
-    Description: 'Name of the network stack'
+    Default: "network"
+    Description: "Name of the network stack"
   DBPassword:
     Type: String
-    Default: 'postgres'
-    Description: 'Database password'
+    Default: "postgres"
+    Description: "Database password"
     NoEcho: true
   DeletionProtection:
     Type: String
-    Default: 'false'
+    Default: "false"
     AllowedValues:
-      - 'true'
-      - 'false'
-    Description: 'Enable deletion protection for the Aurora cluster'
+      - "true"
+      - "false"
+    Description: "Enable deletion protection for the Aurora cluster"
   DBInstanceClass:
     Type: String
-    Default: 'db.t3.medium'
-    Description: 'Aurora instance class'
+    Default: "db.t3.medium"
+    Description: "Aurora instance class"
     AllowedValues:
-      - 'db.t3.medium'
-      - 'db.t3.large'
-      - 'db.r6g.large'
-      - 'db.r6g.xlarge'
-      - 'db.r6g.2xlarge'
+      - "db.t3.medium"
+      - "db.t3.large"
+      - "db.r6g.large"
+      - "db.r6g.xlarge"
+      - "db.r6g.2xlarge"
   BackupRetentionPeriod:
     Type: Number
     Default: 7
     MinValue: 1
     MaxValue: 35
-    Description: 'Number of days to retain backups'
-
+    Description: "Number of days to retain backups"
 Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: 'Subnet group for Aurora PostgreSQL'
+      DBSubnetGroupDescription: "Subnet group for Aurora PostgreSQL"
       SubnetIds:
-        - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet1Id'
-        - Fn::ImportValue: !Sub '${NetworkStackName}-PrivateSubnet2Id'
+        - Fn::ImportValue: !Sub "${NetworkStackName}-PrivateSubnet1Id"
+        - Fn::ImportValue: !Sub "${NetworkStackName}-PrivateSubnet2Id"
       Tags:
         - Key: Name
-          Value: !Sub 'aurora-postgres-subnet-group'
+          Value: "aurora-postgres-subnet-group"
 
   AuroraCluster:
     Type: AWS::RDS::DBCluster
     DeletionPolicy: Snapshot
     Properties:
-      DBClusterIdentifier: !Sub 'postgres-aurora-cluster'
+      DBClusterIdentifier: "cluster"
       Engine: aurora-postgresql
-      EngineVersion: '17.5'
+      EngineVersion: "17.5"
       Port: 5432
       DatabaseName: app
       MasterUsername: postgres
       MasterUserPassword: !Ref DBPassword
       DBSubnetGroupName: !Ref DBSubnetGroup
       VpcSecurityGroupIds:
-        - Fn::ImportValue: !Sub '${NetworkStackName}-AuroraSecurityGroupId'
+        - Fn::ImportValue: !Sub "${NetworkStackName}-RDSSecurityGroupId"
       BackupRetentionPeriod: !Ref BackupRetentionPeriod
       StorageEncrypted: true
       DeletionProtection: !Ref DeletionProtection
+      EnableCloudwatchLogsExports:
+        - postgresql
+      PreferredMaintenanceWindow: "sun:18:00-sun:19:00"
+      PreferredBackupWindow: "17:00-18:00"
       Tags:
         - Key: Name
-          Value: !Sub 'postgres-aurora-cluster'
+          Value: "cluster"
 
-  AuroraInstanceWriter:
+  AuroraInstance1:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub 'postgres-aurora-writer'
+      DBInstanceIdentifier: "instance-1"
       DBClusterIdentifier: !Ref AuroraCluster
       DBInstanceClass: !Ref DBInstanceClass
       Engine: aurora-postgresql
       PubliclyAccessible: false
+      EnablePerformanceInsights: true
+      PerformanceInsightsRetentionPeriod: 7
       Tags:
         - Key: Name
-          Value: !Sub 'postgres-aurora-writer'
-
-  AuroraInstanceReader1:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      DBInstanceIdentifier: !Sub 'postgres-aurora-reader-1'
-      DBClusterIdentifier: !Ref AuroraCluster
-      DBInstanceClass: !Ref DBInstanceClass
-      Engine: aurora-postgresql
-      PubliclyAccessible: false
-      Tags:
-        - Key: Name
-          Value: !Sub 'postgres-aurora-reader-1'
-
-  AuroraInstanceReader2:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      DBInstanceIdentifier: !Sub 'postgres-aurora-reader-2'
-      DBClusterIdentifier: !Ref AuroraCluster
-      DBInstanceClass: !Ref DBInstanceClass
-      Engine: aurora-postgresql
-      PubliclyAccessible: false
-      Tags:
-        - Key: Name
-          Value: !Sub 'postgres-aurora-reader-2'
+          Value: "instance-1"
 
 Outputs:
   ClusterEndpoint:
-    Description: 'Aurora PostgreSQL Cluster Endpoint (Writer)'
+    Description: "Aurora PostgreSQL Cluster Endpoint (Writer)"
     Value: !GetAtt AuroraCluster.Endpoint.Address
     Export:
-      Name: !Sub '${AWS::StackName}-ClusterEndpoint'
+      Name: !Sub "${AWS::StackName}-ClusterEndpoint"
 
   ClusterReaderEndpoint:
-    Description: 'Aurora PostgreSQL Reader Endpoint'
+    Description: "Aurora PostgreSQL Reader Endpoint"
     Value: !GetAtt AuroraCluster.ReadEndpoint.Address
     Export:
-      Name: !Sub '${AWS::StackName}-ClusterReaderEndpoint'
+      Name: !Sub "${AWS::StackName}-ClusterReaderEndpoint"
 
   ClusterPort:
-    Description: 'Aurora PostgreSQL Port'
+    Description: "Aurora PostgreSQL Port"
     Value: !GetAtt AuroraCluster.Endpoint.Port
     Export:
-      Name: !Sub '${AWS::StackName}-ClusterPort'
-
-  ConnectionString:
-    Description: 'PostgreSQL Connection String (Writer)'
-    Value: !Sub 'postgresql://postgres:${DBPassword}@${AuroraCluster.Endpoint.Address}:${AuroraCluster.Endpoint.Port}/app'
-    Export:
-      Name: !Sub '${AWS::StackName}-ConnectionString'
-
-  ReaderConnectionString:
-    Description: 'PostgreSQL Connection String (Reader)'
-    Value: !Sub 'postgresql://postgres:${DBPassword}@${AuroraCluster.ReadEndpoint.Address}:${AuroraCluster.Endpoint.Port}/app'
-    Export:
-      Name: !Sub '${AWS::StackName}-ReaderConnectionString'
+      Name: !Sub "${AWS::StackName}-ClusterPort"

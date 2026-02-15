@@ -74,19 +74,16 @@ gen-migration-file:
 .PHONY: connect-rds
 connect-rds:
 	@INSTANCE_ID=$$(aws ec2 describe-instances --filters "Name=tag:Name,Values=bastion" "Name=instance-state-name,Values=running" --query 'Reservations[0].Instances[0].InstanceId' --output text) && \
-	BASTION_IP=$$(aws ec2 describe-instances --instance-ids $${INSTANCE_ID} --query 'Reservations[0].Instances[0].PublicIpAddress' --output text) && \
 	RDS_ENDPOINT=$$(aws cloudformation describe-stacks --stack-name rds --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' --output text) && \
-	echo "公開鍵を送信中（60秒間有効）..." && \
-	aws ec2-instance-connect send-ssh-public-key --instance-id $${INSTANCE_ID} --instance-os-user ec2-user --ssh-public-key "$$(cat ~/.ssh/id_rsa.pub)" && \
 	echo "pgAdmin4で localhost:5432 に接続してください" && \
 	echo "ユーザー: postgres, パスワード: postgres, DB: app" && \
-	ssh -o StrictHostKeyChecking=no -L 5432:$${RDS_ENDPOINT}:5432 ec2-user@$${BASTION_IP}
+	aws ssm start-session --target $${INSTANCE_ID} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters "{\"host\":[\"$${RDS_ENDPOINT}\"],\"portNumber\":[\"5432\"],\"localPortNumber\":[\"5432\"]}"
 
 .PHONY: connect-bastion
 connect-bastion:
 	@INSTANCE_ID=$$(aws ec2 describe-instances --filters "Name=tag:Name,Values=bastion" "Name=instance-state-name,Values=running" --query 'Reservations[0].Instances[0].InstanceId' --output text) && \
 	echo "Bastionホストに接続中..." && \
-	aws ec2-instance-connect ssh --instance-id $${INSTANCE_ID} --os-user ec2-user
+	aws ssm start-session --target $${INSTANCE_ID}
 
 # SecureStringをCloudFormation経由で作成できない
 .PHONY: ssm-envs

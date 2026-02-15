@@ -222,11 +222,6 @@ Resources:
     Properties:
       GroupDescription: 'Security group for Bastion EC2'
       VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -310,7 +305,33 @@ Resources:
             Action:
               - 'ssm:GetParameter'
               - 'ssm:GetParameters'
+              - 'ssm:UpdateInstanceInformation'
+              - 'ssm:DescribeAssociation'
+              - 'ssm:GetDocument'
+              - 'ssm:DescribeDocument'
+              - 'ssm:GetManifest'
+              - 'ssm:ListAssociations'
+              - 'ssm:ListInstanceAssociations'
+              - 'ssm:PutInventory'
+              - 'ssm:PutComplianceItems'
+              - 'ssm:PutConfigurePackageResult'
+              - 'ssm:UpdateAssociationStatus'
+              - 'ssm:UpdateInstanceAssociationStatus'
+              - 'ssm:GetDeployablePatchSnapshotForInstance'
             Resource: '*'
+
+  SSMMessagesVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
   SNSVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint

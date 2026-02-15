@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: build and deploy
 Parameters:
-  EnvName:
-    Description: environment group (resource group identifier)
-    Type: String
-    AllowedValues:
-      - dev
-      - prod
   BuildTargetBranch:
     Description: build target (trigger) branch name
     Type: String
@@ -27,14 +21,14 @@ Parameters:
     Type: String
     Default: 's3'
     Description: 'Name of the s3 stack'
-  RDSStackName:
-    Type: String
-    Default: 'rds'
-    Description: 'Name of the rds stack'
   NetworkStackName:
     Type: String
     Default: 'network'
     Description: 'Name of the network stack'
+  DatabaseUrlParameterName:
+    Type: String
+    Default: '/app/server/database_url'
+    Description: 'SSM Parameter name for database connection string'
 
 Conditions:
   HasDockerConfigParameterName:
@@ -98,11 +92,9 @@ Resources:
         Image: aws/codebuild/standard:5.0
         ComputeType: BUILD_GENERAL1_MEDIUM
         EnvironmentVariables:
-          - Name: ENV
-            Value: !Ref EnvName
           - Name: DATABASE_URL
-            Value: !ImportValue
-              Fn::Sub: '${RDSStackName}-ConnectionString'
+            Type: PARAMETER_STORE
+            Value: !Ref DatabaseUrlParameterName
           - !If
             - HasDockerConfigParameterName
             - Name: DOCKER_CONFIG_BODY
