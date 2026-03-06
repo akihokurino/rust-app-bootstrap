@@ -37,7 +37,6 @@ cloudfront_sign = "0.4"
 base64 = "0.22"
 strum = "0.27"
 strum_macros = "0.27"
-dotenv = "0.15"
 sentry = { version = "0.46", default-features = false, features = ["rustls", "reqwest", "tracing", "panic", "release-health"] }
 # v6対応は保留
 google-identitytoolkit3 = "5.0.5"

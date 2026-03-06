@@ -1,4 +1,3 @@
-use dotenv::dotenv;
 use google_identitytoolkit3::oauth2;
 use std::str::FromStr;
 
@@ -33,7 +32,11 @@ pub struct Env {
 impl Env {
     pub fn new() -> Self {
         if Self::is_local() {
-            dotenv().ok();
+            if let Ok(contents) = std::fs::read_to_string(".env") {
+                for (key, value) in dotenv_parser::parse_dotenv(&contents).unwrap_or_default() {
+                    unsafe { std::env::set_var(&key, &value) };
+                }
+            }
         }
 
         let google_service_account =
