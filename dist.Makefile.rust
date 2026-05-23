@@ -1,0 +1,14 @@
+build-ApiFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
+
+build-AsyncSnsFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
+
+build-AsyncSqsFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
+
+build-SyncFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
+
+build-BatchFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap

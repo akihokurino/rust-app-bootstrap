@@ -67,7 +67,7 @@ Resources:
   ApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
+      CodeUri: dist/api/
       Handler: bootstrap.is.real.handler
       Runtime: provided.al2
       Events:
@@ -136,7 +136,7 @@ Resources:
   AsyncSnsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
+      CodeUri: dist/async_sns_fn/
       Handler: bootstrap.is.real.handler
       Runtime: provided.al2
       Events:
@@ -160,7 +160,7 @@ Resources:
   AsyncSqsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
+      CodeUri: dist/async_sqs_fn/
       Handler: bootstrap.is.real.handler
       Runtime: provided.al2
       Events:
@@ -188,7 +188,7 @@ Resources:
   SyncFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
+      CodeUri: dist/sync_fn/
       Handler: bootstrap.is.real.handler
       Runtime: provided.al2
       Policies:
@@ -204,7 +204,7 @@ Resources:
   BatchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
+      CodeUri: dist/batch_fn/
       Handler: bootstrap.is.real.handler
       Runtime: provided.al2
       Events:

@@ -9,8 +9,9 @@ ifeq ($(USE_DOCKER), 1)
 endif
 
 BIN_OUTPUT_DIR := target/x86_64-unknown-linux-musl/release
-SRC_FILES := $(shell find . -type f | grep -v '^\./target' | grep -v '/\.')
+SRC_FILES := $(shell find . -type f | grep -v '^\./target' | grep -v '^\./\.aws-sam' | grep -v '^\./dist' | grep -v '/\.')
 DEPLOY_CRATES := api async_sns_fn sync_fn batch_fn async_sqs_fn
+DIST_DIR := dist
 COGNITO_USER_POOL_ID :=ap-northeast-1_qyBWnc7Q7
 COGNITO_USER_NAME := admin-owner
 AWS_SSO_SESSION ?= dev
@@ -19,26 +20,35 @@ $(BIN_OUTPUT_DIR)/%: $(SRC_FILES)
 	$(DOCKER_CMD_BASE) cargo build --release --bin $(lastword $(subst /, ,$@)) --target x86_64-unknown-linux-musl
 	if [ "$(STRIP)" = "1" ]; then strip $@; fi
 
-build-ApiFunction: $(BIN_OUTPUT_DIR)/api
-	cp $< $(ARTIFACTS_DIR)/bootstrap
+# Each build-<Function> runs inside .aws-sam/build/<Function>/, where CodeUri (dist/<func>/)
+# has been copied. The artifact is already there as bootstrap - just cp it.
+build-ApiFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
 
-build-AsyncSnsFunction: $(BIN_OUTPUT_DIR)/async_sns_fn
-	cp $< $(ARTIFACTS_DIR)/bootstrap
+build-AsyncSnsFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
 
-build-AsyncSqsFunction: $(BIN_OUTPUT_DIR)/async_sqs_fn
-	cp $< $(ARTIFACTS_DIR)/bootstrap
+build-AsyncSqsFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
 
-build-SyncFunction: $(BIN_OUTPUT_DIR)/sync_fn
-	cp $< $(ARTIFACTS_DIR)/bootstrap
+build-SyncFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
 
-build-BatchFunction: $(BIN_OUTPUT_DIR)/batch_fn
-	cp $< $(ARTIFACTS_DIR)/bootstrap
+build-BatchFunction:
+	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
 
 .PHONY: build
 build: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 
+# Stage prebuilt artifacts into dist/<func>/ so each CodeUri is tiny.
+# Each dist/<func>/ also gets a minimal Makefile so SAM CustomMakeBuilder works.
+.PHONY: dist
+dist: build
+	rm -rf $(DIST_DIR)
+	$(foreach crate,$(DEPLOY_CRATES),mkdir -p $(DIST_DIR)/$(crate) && cp $(BIN_OUTPUT_DIR)/$(crate) $(DIST_DIR)/$(crate)/bootstrap && cp dist.Makefile.rust $(DIST_DIR)/$(crate)/Makefile;)
+
 .PHONY: deploy
-deploy: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
+deploy: dist
 	sam build
 	sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
 
