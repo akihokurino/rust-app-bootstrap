@@ -9,20 +9,23 @@ use actix_web::http::header::{HeaderMap, HeaderValue};
 use actix_web::HttpRequest;
 use app::adapter::UserAuth;
 use app::domain;
-use app::errors::AppError;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Unauthorized;
+use app::errors::{AppError, NotFoundToNone};
 use app::AppResult;
 use async_graphql::{Context, EmptySubscription};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;
 use std::sync::Arc;
+use tokio::sync::OnceCell;
 
 type AuthorizedUserId = domain::user::Id;
+type AuthorizedUser = OnceCell<domain::user::User>;
 
 #[async_trait]
 trait AppContext {
     fn verified_user_id(&self) -> GraphResult<AuthorizedUserId>;
+    async fn verified_user(&self) -> GraphResult<domain::user::User>;
 }
 #[async_trait]
 impl<'a> AppContext for Context<'_> {
@@ -35,6 +38,27 @@ impl<'a> AppContext for Context<'_> {
                     .into(),
             }),
         }
+    }
+
+    async fn verified_user(&self) -> GraphResult<domain::user::User> {
+        let cell = self.data::<AuthorizedUser>()?;
+
+        cell.get_or_try_init(|| async {
+            let verified_user_id = self.verified_user_id()?;
+            let app = self.data::<app::App>()?;
+
+            let me = app
+                .user_repository
+                .get(app.db_session.conn(), &verified_user_id)
+                .await
+                .not_found_to_none()?;
+            match me {
+                None => Err(Unauthorized.with("ユーザーが存在しません").into()),
+                Some(v) => Ok(v),
+            }
+        })
+        .await
+        .cloned()
     }
 }
 
@@ -79,6 +103,8 @@ impl HttpHandler {
                 gql_req = gql_req.data(Ok::<AuthorizedUserId, AppError>(v.to_string().into()));
             }
         }
+
+        gql_req = gql_req.data(AuthorizedUser::new());
 
         self.schema.execute(gql_req).await.into()
     }

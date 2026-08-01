@@ -37,11 +37,8 @@ impl DefaultQuery {
     }
 
     async fn me(&self, ctx: &Context<'_>) -> GraphResult<MePayload> {
-        let uid = ctx.verified_user_id()?;
-        let user_loader = ctx.data::<UserDataLoader>()?;
-        let user = user_loader.load_one(uid).await?;
-        let user = user.ok_or_else(|| BadRequest.with("user not found"))?;
-        Ok(Me::from(user).into())
+        let me = ctx.verified_user().await?;
+        Ok(Me::from(me).into())
     }
 
     async fn users(&self, ctx: &Context<'_>) -> GraphResult<UserListPayload> {
