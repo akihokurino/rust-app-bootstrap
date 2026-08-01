@@ -45,6 +45,29 @@ where
         .map_err(Internal.withf())
 }
 
+async fn find_multi<E, T, C>(
+    db: DbConn<'_>,
+    id_column: C,
+    ids: Vec<impl AsRef<str>>,
+    order_column: C,
+) -> AppResult<Vec<T>>
+where
+    E: EntityTrait,
+    T: TryFrom<E::Model, Error = String>,
+    C: ColumnTrait,
+{
+    let ids: Vec<String> = ids.into_iter().map(|id| id.as_ref().to_string()).collect();
+    E::find()
+        .filter(id_column.is_in(ids))
+        .order_by_desc(order_column)
+        .all(&db)
+        .await
+        .map_err(Internal.from_srcf())?
+        .into_iter()
+        .map(|v| v.try_into().map_err(Internal.withf()))
+        .collect()
+}
+
 async fn get_multi<E, T, C>(
     db: DbConn<'_>,
     id_column: C,

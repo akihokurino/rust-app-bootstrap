@@ -56,6 +56,7 @@ impl HttpHandler {
         .data(app.clone())
         .data(data_loader::new_user_loader(app.clone()))
         .data(data_loader::new_order_loader(app.clone()))
+        .data(data_loader::new_order_detail_loader(app.clone()))
         .finish();
 
         HttpHandler {

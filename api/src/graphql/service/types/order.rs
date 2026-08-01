@@ -1,4 +1,4 @@
-use crate::graphql::data_loader::{OrderDataLoader, UserDataLoader};
+use crate::graphql::data_loader::{OrderDataLoader, OrderDetailDataLoader, UserDataLoader};
 use crate::graphql::service::types::user::User;
 use crate::graphql::shared::types::DateTime;
 use crate::graphql::GraphResult;
@@ -24,12 +24,11 @@ impl Order {
     }
 
     async fn details(&self, ctx: &Context<'_>) -> GraphResult<Vec<OrderDetail>> {
-        let app = ctx.data::<app::App>()?;
-        let conn = app.db_session.conn();
-        let details = app
-            .order_detail_repository
-            .find_by_order(conn, &self.0.id)
-            .await?;
+        let loader = ctx.data::<OrderDetailDataLoader>()?;
+        let details = loader
+            .load_one(self.0.id.clone())
+            .await?
+            .unwrap_or_default();
         Ok(details.into_iter().map(|v| v.into()).collect())
     }
 

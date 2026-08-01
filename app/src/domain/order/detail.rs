@@ -43,6 +43,11 @@ pub trait OrderDetailRepository: Send + Sync {
     async fn find_by_order(&self, db: DbConn<'_>, order_id: &order::Id) -> AppResult<Vec<Detail>>;
     async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<Detail>;
     async fn get_multi(&self, db: DbConn<'_>, ids: Vec<&Id>) -> AppResult<Vec<Detail>>;
+    async fn get_multi_by_order(
+        &self,
+        db: DbConn<'_>,
+        ids: Vec<&order::Id>,
+    ) -> AppResult<Vec<Detail>>;
     async fn insert(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()>;
     async fn update(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()>;
     async fn delete(&self, db: DbConn<'_>, id: &Id) -> AppResult<()>;

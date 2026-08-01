@@ -71,6 +71,20 @@ impl OrderDetailRepository for Repository {
         repository::get_multi::<OrderDetails, Detail, _>(db, order_details::Column::Id, ids).await
     }
 
+    async fn get_multi_by_order(
+        &self,
+        db: DbConn<'_>,
+        ids: Vec<&order::Id>,
+    ) -> AppResult<Vec<Detail>> {
+        repository::find_multi::<OrderDetails, Detail, _>(
+            db,
+            order_details::Column::OrderId,
+            ids,
+            order_details::Column::CreatedAt,
+        )
+        .await
+    }
+
     async fn insert(&self, db: DbConn<'_>, detail: Detail) -> AppResult<()> {
         repository::insert::<OrderDetails, Detail>(db, detail).await
     }
