@@ -1,3 +1,4 @@
+use sentry::integrations::tracing as sentry_tracing;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -26,5 +27,9 @@ pub fn init() {
                 .event_format(fmt)
                 .with_ansi(atty::is(atty::Stream::Stderr)),
         )
+        .with(sentry_tracing::layer().event_filter(|v| match v.level() {
+            &tracing::Level::ERROR => sentry_tracing::EventFilter::Event,
+            _ => sentry_tracing::EventFilter::Ignore,
+        }))
         .init();
 }

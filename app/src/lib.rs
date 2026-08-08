@@ -28,6 +28,8 @@ pub mod domain;
 mod env;
 pub mod errors;
 mod infra;
+pub mod jwt;
+pub mod util;
 
 pub type AppResult<T> = Result<T, AppError>;
 

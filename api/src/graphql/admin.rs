@@ -1,7 +1,8 @@
 mod query;
 
 use crate::graphql::admin::query::QueryRoot;
-use crate::graphql::{data_loader, GraphResult};
+use crate::graphql::GraphResult;
+use crate::graphql::shared::schema::new_schema_builder;
 use actix_web::http::header::{HeaderMap, HeaderValue};
 use actix_web::HttpRequest;
 use app::adapter::AdminAuth;
@@ -44,12 +45,7 @@ pub struct HttpHandler {
 
 impl HttpHandler {
     pub async fn new(app: app::App) -> Self {
-        let schema = Schema::build(QueryRoot::default(), EmptyMutation, EmptySubscription)
-            .data(app.clone())
-            .data(data_loader::new_user_loader(app.clone()))
-            .data(data_loader::new_order_loader(app.clone()))
-            .data(data_loader::new_order_detail_loader(app.clone()))
-            .finish();
+        let schema = new_schema_builder(app.clone(), QueryRoot::default(), EmptyMutation).finish();
 
         HttpHandler {
             schema,

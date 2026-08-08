@@ -45,7 +45,7 @@ impl Repository {
 #[async_trait]
 impl UserRepository for Repository {
     async fn find(&self, db: DbConn<'_>) -> AppResult<Vec<User>> {
-        repository::find::<Users, User, _>(db, users::Column::CreatedAt).await
+        repository::find_all::<Users, User, _>(db, users::Column::CreatedAt).await
     }
 
     async fn get(&self, db: DbConn<'_>, id: &Id) -> AppResult<User> {

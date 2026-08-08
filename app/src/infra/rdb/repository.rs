@@ -6,15 +6,16 @@ pub mod user;
 use crate::AppResult;
 use crate::adapter::DbConn;
 use crate::domain::HasId;
+use crate::domain::types::pager::Pager;
 use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::errors::map_insert_error;
 use sea_orm::sea_query::{IntoIden, OnConflict};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, PrimaryKeyTrait, QueryFilter,
-    QueryOrder,
+    QueryOrder, QuerySelect,
 };
 
-async fn find<E, T, C>(db: DbConn<'_>, order_column: C) -> AppResult<Vec<T>>
+async fn find_all<E, T, C>(db: DbConn<'_>, order_column: C) -> AppResult<Vec<T>>
 where
     E: EntityTrait,
     T: TryFrom<E::Model, Error = String>,
@@ -30,6 +31,28 @@ where
         .collect()
 }
 
+async fn find_with_pager<E, T, C>(
+    db: DbConn<'_>,
+    order_column: C,
+    pager: Pager,
+) -> AppResult<Vec<T>>
+where
+    E: EntityTrait,
+    T: TryFrom<E::Model, Error = String>,
+    C: ColumnTrait,
+{
+    E::find()
+        .order_by_desc(order_column)
+        .limit(pager.limit as u64)
+        .offset(pager.offset() as u64)
+        .all(&db)
+        .await
+        .map_err(Internal.from_srcf())?
+        .into_iter()
+        .map(|v| v.try_into().map_err(Internal.withf()))
+        .collect()
+}
+
 async fn get<E, T>(db: DbConn<'_>, id: impl AsRef<str>) -> AppResult<T>
 where
     E: EntityTrait,
@@ -37,6 +60,22 @@ where
     T: TryFrom<E::Model, Error = String>,
 {
     E::find_by_id(id.as_ref().to_string())
+        .one(&db)
+        .await
+        .map_err(Internal.from_srcf())?
+        .ok_or_else(|| NotFound.default())?
+        .try_into()
+        .map_err(Internal.withf())
+}
+
+async fn get_with_lock<E, T>(db: DbConn<'_>, id: impl AsRef<str>) -> AppResult<T>
+where
+    E: EntityTrait,
+    <E::PrimaryKey as PrimaryKeyTrait>::ValueType: From<String>,
+    T: TryFrom<E::Model, Error = String>,
+{
+    E::find_by_id(id.as_ref().to_string())
+        .lock_exclusive()
         .one(&db)
         .await
         .map_err(Internal.from_srcf())?
