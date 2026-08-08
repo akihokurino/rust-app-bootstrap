@@ -2,17 +2,18 @@ use crate::adapter::{
     AdminAuth, DBSession, ErrorNotifier, ImageCdn, Mail, RemoteFunction, Storage, TaskQueue,
     UserAuth,
 };
-use crate::domain::order::detail::OrderDetailRepository;
 use crate::domain::order::OrderRepository;
+use crate::domain::order::detail::OrderDetailRepository;
 use crate::domain::user::UserRepository;
 use crate::errors::AppError;
 use crate::errors::Kind::Internal;
 use crate::infra::sentry as sentry_adapter;
 use crate::infra::{cloudfront, cognito, firebase, ssm};
 use aws_config::BehaviorVersion;
-use google_fcm1::{hyper, hyper_rustls};
-use google_identitytoolkit3::oauth2::ServiceAccountAuthenticator;
 use google_identitytoolkit3::IdentityToolkit;
+use google_identitytoolkit3::yup_oauth2::ServiceAccountAuthenticator;
+use google_identitytoolkit3::yup_oauth2::client::CustomHyperClientBuilder;
+use google_identitytoolkit3::{hyper_rustls, hyper_util};
 use infra::rdb::{repository, session_manager};
 use infra::{lambda, s3, sns, sqs};
 #[allow(unused)]
@@ -87,10 +88,12 @@ pub async fn app() -> AppResult<&'static App> {
         &envs.from_email_address,
     ));
     let error_notifier: Arc<dyn ErrorNotifier> = Arc::new(sentry_adapter::Adapter::new(
-        ::sentry::Client::from_config(::sentry::apply_defaults(::sentry::ClientOptions {
-            dsn: Some(Dsn::from_str(envs.sentry_dsn.as_str()).map_err(Internal.from_srcf())?),
-            transport: Some(Arc::new(::sentry::transports::DefaultTransportFactory)),
-            ..Default::default()
+        ::sentry::Client::from_config(::sentry::apply_defaults({
+            let mut options = ::sentry::ClientOptions::default();
+            options.dsn =
+                Some(Dsn::from_str(envs.sentry_dsn.as_str()).map_err(Internal.from_srcf())?);
+            options.transport = Some(Arc::new(::sentry::transports::DefaultTransportFactory));
+            options
         })),
         env::Env::is_local(),
     ));
@@ -127,29 +130,36 @@ pub async fn app() -> AppResult<&'static App> {
 
             let google_account = ServiceAccountAuthenticator::with_client(
                 cred.clone(),
-                hyper::Client::builder().build(
-                    hyper_rustls::HttpsConnectorBuilder::new()
-                        .with_native_roots()
-                        .unwrap()
-                        .https_or_http()
-                        .enable_http1()
-                        .enable_http2()
-                        .build(),
+                CustomHyperClientBuilder::from(
+                    hyper_util::client::legacy::Client::builder(
+                        hyper_util::rt::TokioExecutor::new(),
+                    )
+                    .build(
+                        hyper_rustls::HttpsConnectorBuilder::new()
+                            .with_native_roots()
+                            .unwrap()
+                            .https_or_http()
+                            .enable_http1()
+                            .enable_http2()
+                            .build(),
+                    ),
                 ),
             )
             .build()
             .await
             .unwrap();
 
-            let google_http_conn = hyper::Client::builder().build(
-                hyper_rustls::HttpsConnectorBuilder::new()
-                    .with_native_roots()
-                    .unwrap()
-                    .https_or_http()
-                    .enable_http1()
-                    .enable_http2()
-                    .build(),
-            );
+            let google_http_conn =
+                hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+                    .build(
+                        hyper_rustls::HttpsConnectorBuilder::new()
+                            .with_native_roots()
+                            .unwrap()
+                            .https_or_http()
+                            .enable_http1()
+                            .enable_http2()
+                            .build(),
+                    );
 
             let firebase_auth = firebase::auth::Adapter::new(
                 project_id,

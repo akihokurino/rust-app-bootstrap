@@ -3,11 +3,11 @@ pub mod order;
 pub mod order_detail;
 pub mod user;
 
+use crate::AppResult;
 use crate::adapter::DbConn;
 use crate::domain::HasId;
 use crate::errors::Kind::{Internal, NotFound};
 use crate::infra::rdb::errors::map_insert_error;
-use crate::AppResult;
 use sea_orm::sea_query::{IntoIden, OnConflict};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, PrimaryKeyTrait, QueryFilter,
@@ -116,6 +116,8 @@ where
     let model: E::Model = entity.into();
     let active_model = model.into_active_model().reset_all();
     E::update(active_model)
+        .validate()
+        .map_err(Internal.from_srcf())?
         .filter(id_column.eq(id))
         .exec(&db)
         .await

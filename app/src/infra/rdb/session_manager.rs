@@ -1,13 +1,13 @@
+use crate::AppResult;
 use crate::adapter::{DBSession, DbConn};
 use crate::errors::Kind::Internal;
-use crate::AppResult;
 use async_trait::async_trait;
 use sea_orm::{
     ConnectOptions, Database, DatabaseConnection, DatabaseTransaction, TransactionTrait,
 };
 use std::env;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -108,73 +108,38 @@ impl std::ops::Deref for TransactionGuard {
         self.as_ref()
     }
 }
+#[async_trait]
 impl sea_orm::ConnectionTrait for TransactionGuard {
     fn get_database_backend(&self) -> sea_orm::DatabaseBackend {
         self.as_ref().get_database_backend()
     }
 
-    fn execute<'life0, 'async_trait>(
-        &'life0 self,
+    async fn execute_raw(
+        &self,
         stmt: sea_orm::Statement,
-    ) -> std::pin::Pin<
-        Box<dyn Future<Output = Result<sea_orm::ExecResult, sea_orm::DbErr>> + Send + 'async_trait>,
-    >
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        Box::pin(async move { self.as_ref().execute(stmt).await })
+    ) -> Result<sea_orm::ExecResult, sea_orm::DbErr> {
+        self.as_ref().execute_raw(stmt).await
     }
 
-    fn query_one<'life0, 'async_trait>(
-        &'life0 self,
+    async fn query_one_raw(
+        &self,
         stmt: sea_orm::Statement,
-    ) -> std::pin::Pin<
-        Box<
-            dyn Future<Output = Result<Option<sea_orm::QueryResult>, sea_orm::DbErr>>
-                + Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        Box::pin(async move { self.as_ref().query_one(stmt).await })
+    ) -> Result<Option<sea_orm::QueryResult>, sea_orm::DbErr> {
+        self.as_ref().query_one_raw(stmt).await
     }
 
-    fn query_all<'life0, 'async_trait>(
-        &'life0 self,
+    async fn query_all_raw(
+        &self,
         stmt: sea_orm::Statement,
-    ) -> std::pin::Pin<
-        Box<
-            dyn Future<Output = Result<Vec<sea_orm::QueryResult>, sea_orm::DbErr>>
-                + Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        Box::pin(async move { self.as_ref().query_all(stmt).await })
+    ) -> Result<Vec<sea_orm::QueryResult>, sea_orm::DbErr> {
+        self.as_ref().query_all_raw(stmt).await
     }
 
     fn support_returning(&self) -> bool {
         self.as_ref().support_returning()
     }
 
-    fn execute_unprepared<'life0, 'life1, 'async_trait>(
-        &'life0 self,
-        sql: &'life1 str,
-    ) -> std::pin::Pin<
-        Box<dyn Future<Output = Result<sea_orm::ExecResult, sea_orm::DbErr>> + Send + 'async_trait>,
-    >
-    where
-        'life0: 'async_trait,
-        'life1: 'async_trait,
-        Self: 'async_trait,
-    {
-        Box::pin(async move { self.as_ref().execute_unprepared(sql).await })
+    async fn execute_unprepared(&self, sql: &str) -> Result<sea_orm::ExecResult, sea_orm::DbErr> {
+        self.as_ref().execute_unprepared(sql).await
     }
 }

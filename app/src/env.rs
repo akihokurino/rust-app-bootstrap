@@ -1,4 +1,4 @@
-use google_identitytoolkit3::oauth2;
+use google_identitytoolkit3::yup_oauth2 as oauth2;
 use std::str::FromStr;
 
 fn must_env(k: &str) -> String {

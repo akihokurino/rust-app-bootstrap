@@ -1,15 +1,15 @@
-use crate::graphql::service::types::order::{Order, OrderPayload};
-use crate::graphql::service::types::user::{Me, MePayload};
+use crate::graphql::GraphResult;
 use crate::graphql::service::AppContext;
 use crate::graphql::service::AppResult;
+use crate::graphql::service::types::order::{Order, OrderPayload};
+use crate::graphql::service::types::user::{Me, MePayload};
 use crate::graphql::shared::types::{BoolPayload, Date};
-use crate::graphql::GraphResult;
 use app::domain;
 use app::domain::user::Gender;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Internal;
 use async_graphql::{Context, Enum, InputObject, MergedObject, Object, SimpleObject};
-use rand::Rng;
+use rand::RngExt;
 
 #[derive(MergedObject, Default)]
 pub struct MutationRoot(DefaultMutation);

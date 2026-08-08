@@ -26,7 +26,7 @@ impl Adapter {
 impl ErrorNotifier for Adapter {
     fn init(&self) -> InitGuard {
         let client = Arc::new(self.client.clone());
-        sentry::Hub::with(|hub| hub.bind_client(Some(client.clone())));
+        sentry::Hub::current().bind_client(Some(client.clone()));
         if client.options().auto_session_tracking
             && client.options().session_mode == sentry::SessionMode::Application
         {

@@ -1,19 +1,19 @@
 use crate::adapter::{UserAuth, UserPrincipal};
 use crate::errors::Kind::{BadRequest, Internal, NotFound};
-use crate::{domain, AppResult};
+use crate::{AppResult, domain};
 use async_graphql::async_trait::async_trait;
 use google_identitytoolkit3::api::{
     IdentitytoolkitRelyingpartyDeleteAccountRequest,
     IdentitytoolkitRelyingpartyGetAccountInfoRequest,
 };
-use google_identitytoolkit3::{hyper, hyper_rustls};
+use google_identitytoolkit3::{hyper_rustls, hyper_util};
 use jsonwebtoken::{DecodingKey, Validation};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 pub type IdentityToolkit = google_identitytoolkit3::IdentityToolkit<
-    hyper_rustls::HttpsConnector<hyper::client::HttpConnector>,
+    hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
 >;
 
 #[derive(Clone)]

@@ -5,17 +5,17 @@ edition = "2024"
 
 [dependencies]
 app = { path = "../app" }
-tokio = { version = "1.48", features = ["full"] }
+tokio = { version = "1.53", features = ["full"] }
 tracing = { version = "0.1", features = [] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 async-trait = "0.1"
-actix-web = "4.12"
-async-graphql = { version = "7.0", features = ["dataloader", "log"] }
-async-graphql-actix-web = "7.0"
-async-graphql-value = "7.0"
+actix-web = "4.14"
+async-graphql = { version = "7.2", features = ["dataloader", "log"] }
+async-graphql-actix-web = "7.2"
+async-graphql-value = "7.2"
 derive_more = "2.1"
 actix-cors = "0.7"
 lambda-web = { version = "0.2", features = ["actix4"] }
-rand = "0.10.0-rc.5"
+rand = "0.10"
 base-62 = "0.1"
 serde_json = "1.0"
