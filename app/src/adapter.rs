@@ -27,12 +27,12 @@ pub trait Storage: Send + Sync {
 
 #[async_trait]
 pub trait TaskQueue: Send + Sync {
-    async fn publish(&self, input: serde_json::Value, target: String) -> AppResult<()>;
+    async fn publish(&self, input: serde_json::Value, target: &str) -> AppResult<()>;
 }
 
 #[async_trait]
 pub trait RemoteFunction: Send + Sync {
-    async fn invoke(&self, input: serde_json::Value, arn: String) -> AppResult<serde_json::Value>;
+    async fn invoke(&self, input: serde_json::Value, arn: &str) -> AppResult<serde_json::Value>;
 }
 
 #[async_trait]

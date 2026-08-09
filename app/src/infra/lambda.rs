@@ -21,7 +21,7 @@ impl Adapter {
 
 #[async_trait]
 impl RemoteFunction for Adapter {
-    async fn invoke(&self, input: serde_json::Value, arn: String) -> AppResult<serde_json::Value> {
+    async fn invoke(&self, input: serde_json::Value, arn: &str) -> AppResult<serde_json::Value> {
         let json = serde_json::to_string(&input).map_err(Internal.from_srcf())?;
         let resp = self
             .client

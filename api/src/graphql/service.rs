@@ -6,7 +6,7 @@ use crate::graphql::service::mutation::MutationRoot;
 use crate::graphql::service::query::QueryRoot;
 use crate::graphql::GraphResult;
 use crate::graphql::shared::schema::new_schema_builder;
-use actix_web::http::header::{HeaderMap, HeaderValue};
+use actix_web::http::header::HeaderValue;
 use actix_web::HttpRequest;
 use app::adapter::UserAuth;
 use app::domain;
@@ -85,9 +85,9 @@ impl HttpHandler {
     pub async fn handle(&self, http_req: HttpRequest, gql_req: GraphQLRequest) -> GraphQLResponse {
         let mut gql_req = gql_req.into_inner();
 
-        let headers: HeaderMap = HeaderMap::from_iter(http_req.headers().clone().into_iter());
-        gql_req = gql_req.data(match (headers.get("authorization"), self.auth.clone()) {
-            (Some(hv), Some(auth)) => verify_token(&*auth, hv).await,
+        let headers = http_req.headers();
+        gql_req = gql_req.data(match (headers.get("authorization"), self.auth.as_ref()) {
+            (Some(hv), Some(auth)) => verify_token(auth.as_ref(), hv).await,
             _ => Err(Unauthorized.into()),
         });
 

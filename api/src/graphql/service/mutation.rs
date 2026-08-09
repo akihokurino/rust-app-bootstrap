@@ -48,13 +48,13 @@ impl DefaultMutation {
         app.sns_task_queue
             .publish(
                 serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
-                app.env.sns_async_task_topic_arn.clone(),
+                &app.env.sns_async_task_topic_arn,
             )
             .await?;
         app.sqs_task_queue
             .publish(
                 serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
-                app.env.sqs_async_task_queue_url.clone(),
+                &app.env.sqs_async_task_queue_url,
             )
             .await?;
         Ok(true.into())
@@ -69,7 +69,7 @@ impl DefaultMutation {
             .remote_function
             .invoke(
                 serde_json::to_value(&payload).map_err(Internal.from_srcf())?,
-                app.env.sync_task_lambda_arn.clone(),
+                &app.env.sync_task_lambda_arn,
             )
             .await?;
         let resp: domain::types::task::SyncTaskResponse =

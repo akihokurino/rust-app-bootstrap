@@ -37,15 +37,11 @@ impl Storage for Adapter {
             .client
             .put_object()
             .bucket(self.default_bucket.clone())
-            .key(key.to_string().as_str())
+            .key(key.to_string())
             .presigned(PresigningConfig::expires_in(expires_in).unwrap())
             .await
             .map_err(Internal.from_srcf())?;
-        Ok(pre_signed
-            .uri()
-            .to_owned()
-            .parse()
-            .map_err(Internal.from_srcf())?)
+        Ok(pre_signed.uri().parse().map_err(Internal.from_srcf())?)
     }
 
     async fn presign_for_get(&self, key: &AssetKey) -> AppResult<Uri> {
@@ -54,15 +50,11 @@ impl Storage for Adapter {
             .client
             .get_object()
             .bucket(self.default_bucket.clone())
-            .key(key.to_string().as_str())
+            .key(key.to_string())
             .presigned(PresigningConfig::expires_in(expires_in).unwrap())
             .await
             .map_err(Internal.from_srcf())?;
-        Ok(pre_signed
-            .uri()
-            .to_owned()
-            .parse()
-            .map_err(Internal.from_srcf())?)
+        Ok(pre_signed.uri().parse().map_err(Internal.from_srcf())?)
     }
 
     async fn download_object(&self, key: &AssetKey) -> AppResult<Bytes> {
@@ -70,7 +62,7 @@ impl Storage for Adapter {
             .client
             .get_object()
             .bucket(self.default_bucket.clone())
-            .key(key.to_string().as_str())
+            .key(key.to_string())
             .send()
             .await
             .map_err(|e: SdkError<GetObjectError>| match &e {
@@ -86,7 +78,7 @@ impl Storage for Adapter {
             .client
             .head_object()
             .bucket(self.default_bucket.clone())
-            .key(key.to_string().as_str())
+            .key(key.to_string())
             .send()
             .await;
 
@@ -109,7 +101,7 @@ impl Storage for Adapter {
             .copy_object()
             .bucket(self.default_bucket.clone())
             .copy_source(format!("{}/{}", self.default_bucket, src_key))
-            .key(dest_key.to_string().as_str())
+            .key(dest_key.to_string())
             .send()
             .await;
 
@@ -126,7 +118,7 @@ impl Storage for Adapter {
             .client
             .delete_object()
             .bucket(self.default_bucket.clone())
-            .key(key.to_string().as_str())
+            .key(key.to_string())
             .send()
             .await;
 

@@ -96,20 +96,19 @@ impl UserAuth for Adapter {
             if users.is_empty() {
                 return Err(NotFound.with("user not found"));
             }
-            let user = users.first().unwrap();
+            let user = users.into_iter().next().unwrap();
             Ok(UserPrincipal {
-                uid: Some(user.local_id.clone().unwrap()),
-                email: user.clone().email.map(|v| v.clone()),
+                uid: Some(user.local_id.unwrap()),
+                email: user.email,
                 provider_ids: user
                     .provider_user_info
-                    .clone()
                     .map(|v| {
                         v.into_iter()
                             .filter_map(|v| v.provider_id)
                             .collect::<Vec<_>>()
                     })
                     .unwrap_or_default(),
-                last_login_at: user.last_login_at.clone(),
+                last_login_at: user.last_login_at,
             })
         } else {
             Err(NotFound.with("user not found"))

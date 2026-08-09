@@ -118,7 +118,7 @@ impl AdminAuth for Adapter {
     }
 
     async fn create(&self, id: admin_user::Id, email: Email) -> AppResult<()> {
-        let email_str: String = email.clone().into();
+        let email_str: String = email.into();
         self.client
             .admin_create_user()
             .user_pool_id(self.user_pool_id.clone())
@@ -126,7 +126,7 @@ impl AdminAuth for Adapter {
             .set_user_attributes(Some(
                 [("email", email_str), ("email_verified", "true".to_string())]
                     .map(|(k, v)| AttributeType::builder().name(k).value(v).build().unwrap())
-                    .to_vec(),
+                    .into(),
             ))
             .send()
             .await
