@@ -1,20 +1,20 @@
-use crate::errors::Kind::{Duplicate, Internal};
-use sea_orm::DbErr;
+use crate::errors::Kind::{Duplicate, Internal, NotFound};
+use sea_orm::{DbErr, SqlErr};
 
 pub fn map_insert_error(error: DbErr) -> crate::AppError {
+    if let Some(SqlErr::UniqueConstraintViolation(_)) = error.sql_err() {
+        return Duplicate.default();
+    }
+
     match &error {
         DbErr::RecordNotInserted => Internal.with("record not inserted"),
-        DbErr::Exec(sea_orm::RuntimeErr::SqlxError(sqlx_err)) => {
-            if let Some(db_err) = sqlx_err.as_database_error() {
-                if db_err.code() == Some(std::borrow::Cow::Borrowed("23505")) {
-                    Duplicate.default()
-                } else {
-                    Internal.from_src(error)
-                }
-            } else {
-                Internal.from_src(error)
-            }
-        }
+        _ => Internal.from_src(error),
+    }
+}
+
+pub fn map_update_error(error: DbErr) -> crate::AppError {
+    match &error {
+        DbErr::RecordNotUpdated => NotFound.default(),
         _ => Internal.from_src(error),
     }
 }

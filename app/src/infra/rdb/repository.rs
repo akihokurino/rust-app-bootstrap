@@ -8,7 +8,7 @@ use crate::adapter::DbConn;
 use crate::domain::HasId;
 use crate::domain::types::pager::Pager;
 use crate::errors::Kind::{Internal, NotFound};
-use crate::infra::rdb::errors::map_insert_error;
+use crate::infra::rdb::errors::{map_insert_error, map_update_error};
 use sea_orm::sea_query::{IntoIden, OnConflict};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, PrimaryKeyTrait, QueryFilter,
@@ -160,7 +160,7 @@ where
         .filter(id_column.eq(id))
         .exec(&db)
         .await
-        .map_err(Internal.from_srcf())?;
+        .map_err(map_update_error)?;
     Ok(())
 }
 

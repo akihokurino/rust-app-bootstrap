@@ -6,11 +6,13 @@ use google_identitytoolkit3::api::{
     IdentitytoolkitRelyingpartyDeleteAccountRequest,
     IdentitytoolkitRelyingpartyGetAccountInfoRequest,
 };
+use google_identitytoolkit3::common::{Delegate, Response, Retry};
 use google_identitytoolkit3::{hyper_rustls, hyper_util};
 use jsonwebtoken::{DecodingKey, Validation};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use std::time::Duration;
 
 pub type IdentityToolkit = google_identitytoolkit3::IdentityToolkit<
     hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
@@ -81,10 +83,12 @@ impl UserAuth for Adapter {
         let mut request = IdentitytoolkitRelyingpartyGetAccountInfoRequest::default();
         request.local_id = Some(vec![id.as_str().to_string()]);
 
+        let mut delegate = RetryOnTransientError::default();
         let result = self
             .identity_toolkit
             .relyingparty()
             .get_account_info(request)
+            .delegate(&mut delegate)
             .doit()
             .await
             .map_err(Internal.from_srcf())?;
@@ -126,6 +130,33 @@ impl UserAuth for Adapter {
                 _ => Internal.from_src(v),
             })?;
         Ok(())
+    }
+}
+
+#[derive(Default)]
+struct RetryOnTransientError {
+    attempts: u32,
+}
+impl RetryOnTransientError {
+    fn next_backoff(&mut self) -> Retry {
+        if self.attempts >= 2 {
+            return Retry::Abort;
+        }
+        self.attempts += 1;
+        Retry::After(Duration::from_millis(200 * 2u64.pow(self.attempts)))
+    }
+}
+impl Delegate for RetryOnTransientError {
+    fn http_error(&mut self, _err: &hyper_util::client::legacy::Error) -> Retry {
+        self.next_backoff()
+    }
+
+    fn http_failure(&mut self, res: &Response, _err: Option<&serde_json::Value>) -> Retry {
+        if res.status().is_server_error() || res.status().as_u16() == 429 {
+            self.next_backoff()
+        } else {
+            Retry::Abort
+        }
     }
 }
 
