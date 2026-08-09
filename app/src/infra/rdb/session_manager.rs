@@ -6,8 +6,6 @@ use sea_orm::{
     ConnectOptions, Database, DatabaseConnection, DatabaseTransaction, TransactionTrait,
 };
 use std::env;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -20,8 +18,7 @@ impl SessionManager {
         let mut opt = ConnectOptions::new(database_url);
         opt.max_connections(2)
             .min_connections(1)
-            .connect_timeout(Duration::from_secs(10))
-            .acquire_timeout(Duration::from_secs(10))
+            .acquire_timeout(Duration::from_secs(3))
             .idle_timeout(Duration::from_secs(300))
             .max_lifetime(Duration::from_secs(1800));
 
@@ -56,15 +53,11 @@ impl DBSession for SessionManager {
 
 pub struct TransactionGuard {
     inner: Option<DatabaseTransaction>,
-    committed: Arc<AtomicBool>,
 }
 
 impl TransactionGuard {
     fn new(tx: DatabaseTransaction) -> Self {
-        Self {
-            inner: Some(tx),
-            committed: Arc::new(AtomicBool::new(false)),
-        }
+        Self { inner: Some(tx) }
     }
 
     pub fn as_ref(&self) -> &DatabaseTransaction {
@@ -78,29 +71,16 @@ impl TransactionGuard {
     pub async fn commit(mut self) -> AppResult<()> {
         let tx = self.inner.take().expect("Transaction already consumed");
         tx.commit().await.map_err(Internal.from_srcf())?;
-        self.committed.store(true, Ordering::Relaxed);
         Ok(())
     }
 
     pub async fn rollback(mut self) -> AppResult<()> {
         let tx = self.inner.take().expect("Transaction already consumed");
         tx.rollback().await.map_err(Internal.from_srcf())?;
-        self.committed.store(true, Ordering::Relaxed);
         Ok(())
     }
 }
 
-impl Drop for TransactionGuard {
-    fn drop(&mut self) {
-        if let Some(tx) = self.inner.take() {
-            if !self.committed.load(Ordering::Relaxed) {
-                tokio::spawn(async move {
-                    let _ = tx.rollback().await;
-                });
-            }
-        }
-    }
-}
 impl std::ops::Deref for TransactionGuard {
     type Target = DatabaseTransaction;
 
