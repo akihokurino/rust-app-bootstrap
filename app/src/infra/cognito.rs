@@ -9,11 +9,11 @@ use aws_sdk_cognitoidentityprovider::operation::admin_get_user::AdminGetUserErro
 use aws_sdk_cognitoidentityprovider::types::AttributeType;
 use jsonwebtoken::{DecodingKey, Validation};
 
+use crate::AppResult;
 use crate::adapter::AdminAuth;
 use crate::domain::admin_user;
 use crate::domain::types::email::Email;
 use crate::errors::Kind::*;
-use crate::AppResult;
 
 #[derive(Clone, Debug)]
 pub struct Adapter {

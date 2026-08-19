@@ -1,10 +1,10 @@
 pub mod detail;
 
-use crate::adapter::DbConn;
-use crate::domain::types::time::{now, LocalDateTime};
-use crate::domain::user::User;
-use crate::domain::{user, HasId};
 use crate::AppResult;
+use crate::adapter::DbConn;
+use crate::domain::types::time::{LocalDateTime, now};
+use crate::domain::user::User;
+use crate::domain::{HasId, user};
 use async_trait::async_trait;
 
 pub type Id = crate::domain::Id<Order>;

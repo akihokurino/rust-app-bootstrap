@@ -4,7 +4,7 @@ mod playground;
 use crate::playground::my_playground_source;
 use actix_cors::Cors;
 use actix_web::web::Data;
-use actix_web::{guard, web, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, guard, web};
 use async_graphql::http::GraphQLPlaygroundConfig;
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 

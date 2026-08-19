@@ -1,10 +1,10 @@
+use crate::graphql::GraphResult;
 use crate::graphql::data_loader::{OrderDataLoader, OrderDetailDataLoader, UserDataLoader};
 use crate::graphql::service::types::user::User;
 use crate::graphql::shared::types::DateTime;
-use crate::graphql::GraphResult;
 use app::domain;
 use app::errors::Kind::*;
-use async_graphql::{Context, Object, ID};
+use async_graphql::{Context, ID, Object};
 use derive_more::From;
 
 #[derive(Debug, Clone, From)]

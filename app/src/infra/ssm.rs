@@ -1,5 +1,5 @@
-use crate::errors::Kind::Internal;
 use crate::AppResult;
+use crate::errors::Kind::Internal;
 
 pub struct Adapter {
     cli: aws_sdk_ssm::Client,

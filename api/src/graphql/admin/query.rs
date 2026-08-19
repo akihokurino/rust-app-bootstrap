@@ -1,5 +1,5 @@
-use crate::graphql::admin::AppContext;
 use crate::graphql::GraphResult;
+use crate::graphql::admin::AppContext;
 use async_graphql::{Context, MergedObject, Object};
 
 #[derive(MergedObject, Default)]

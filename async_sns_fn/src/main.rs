@@ -1,8 +1,8 @@
 use anyhow::anyhow;
+use app::AppResult;
 use app::domain::types::task::{AsyncTaskPayload, SnsEventData};
 use app::errors::Kind::BadRequest;
-use app::AppResult;
-use lambda_runtime::{service_fn, Error, LambdaEvent};
+use lambda_runtime::{Error, LambdaEvent, service_fn};
 use serde_json::Value;
 
 #[tokio::main]
@@ -32,7 +32,6 @@ async fn bridge(event: LambdaEvent<Value>) -> Result<(), Error> {
 }
 
 async fn exec(_app: &app::App, payload: Value) -> AppResult<()> {
-
     let data: SnsEventData = serde_json::from_value(payload)
         .map_err(|e| BadRequest.with("failed to parse payload").with_src(e))?;
     if let Some(record) = data.records.first() {

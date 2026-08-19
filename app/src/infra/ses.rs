@@ -1,13 +1,13 @@
 use async_graphql::async_trait::async_trait;
+use aws_sdk_sesv2::Client;
 use aws_sdk_sesv2::error::SdkError;
 use aws_sdk_sesv2::operation::send_email::SendEmailError;
 use aws_sdk_sesv2::types::{Body, Content, Destination, EmailContent, Message};
-use aws_sdk_sesv2::Client;
 
+use crate::AppResult;
 use crate::adapter::Mail;
 use crate::domain::types::email::Email;
 use crate::errors::Kind::Internal;
-use crate::AppResult;
 
 #[derive(Clone, Debug)]
 pub struct Adapter {

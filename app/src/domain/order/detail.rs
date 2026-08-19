@@ -1,9 +1,9 @@
+use crate::AppResult;
 use crate::adapter::DbConn;
 use crate::domain::order::Order;
 use crate::domain::types::string::impl_len_restricted_string_model;
-use crate::domain::types::time::{now, LocalDateTime};
-use crate::domain::{order, HasId};
-use crate::AppResult;
+use crate::domain::types::time::{LocalDateTime, now};
+use crate::domain::{HasId, order};
 use async_trait::async_trait;
 
 pub type Id = crate::domain::Id<Detail>;

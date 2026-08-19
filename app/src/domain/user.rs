@@ -1,8 +1,8 @@
-use crate::adapter::DbConn;
-use crate::domain::types::string::impl_len_restricted_string_model;
-use crate::domain::types::time::{now, Date, LocalDateTime};
-use crate::domain::HasId;
 use crate::AppResult;
+use crate::adapter::DbConn;
+use crate::domain::HasId;
+use crate::domain::types::string::impl_len_restricted_string_model;
+use crate::domain::types::time::{Date, LocalDateTime, now};
 use async_trait::async_trait;
 use strum::IntoEnumIterator;
 

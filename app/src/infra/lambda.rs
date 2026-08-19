@@ -1,12 +1,12 @@
 pub mod types;
 
+use crate::AppResult;
 use crate::adapter::RemoteFunction;
 use crate::errors::Kind::Internal;
 use crate::infra::lambda::types::ErrorResponse;
-use crate::AppResult;
 use async_trait::async_trait;
-use aws_sdk_lambda::primitives::Blob;
 use aws_sdk_lambda::Client;
+use aws_sdk_lambda::primitives::Blob;
 
 #[derive(Clone, Debug)]
 pub struct Adapter {

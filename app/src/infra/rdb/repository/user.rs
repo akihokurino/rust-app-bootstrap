@@ -1,9 +1,9 @@
+use crate::AppResult;
 use crate::adapter::DbConn;
 use crate::domain::user::{Id, User, UserRepository};
 use crate::infra::rdb::generated::prelude::*;
 use crate::infra::rdb::generated::users;
 use crate::infra::rdb::repository;
-use crate::AppResult;
 use async_trait::async_trait;
 
 impl TryFrom<users::Model> for User {

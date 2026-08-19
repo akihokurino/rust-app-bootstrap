@@ -1,15 +1,15 @@
 mod query;
 
-use crate::graphql::admin::query::QueryRoot;
 use crate::graphql::GraphResult;
+use crate::graphql::admin::query::QueryRoot;
 use crate::graphql::shared::schema::new_schema_builder;
-use actix_web::http::header::HeaderValue;
 use actix_web::HttpRequest;
+use actix_web::http::header::HeaderValue;
 use app::adapter::AdminAuth;
 use app::errors::AppError;
 use app::errors::Kind::BadRequest;
 use app::errors::Kind::Unauthorized;
-use app::{domain, AppResult};
+use app::{AppResult, domain};
 use async_graphql::{Context, EmptyMutation, EmptySubscription};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;

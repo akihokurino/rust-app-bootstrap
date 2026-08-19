@@ -175,4 +175,3 @@ impl<T> NotFoundToNone<T> for Result<T, AppError> {
         }
     }
 }
-

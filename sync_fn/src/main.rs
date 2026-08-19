@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use app::domain::types::task::{SyncTaskPayload, SyncTaskResponse};
 use app::AppResult;
-use lambda_runtime::{service_fn, Error, LambdaEvent};
+use app::domain::types::task::{SyncTaskPayload, SyncTaskResponse};
+use lambda_runtime::{Error, LambdaEvent, service_fn};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -35,7 +35,6 @@ async fn bridge(event: LambdaEvent<SyncTaskPayload>) -> Result<SyncTaskResponse,
 }
 
 async fn exec(_app: &app::App, payload: SyncTaskPayload) -> AppResult<SyncTaskResponse> {
-
     tracing::info!("Task name: {}", payload.name);
 
     Ok(SyncTaskResponse { name: payload.name })

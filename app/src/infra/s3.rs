@@ -1,15 +1,15 @@
 pub mod types;
 
+use crate::AppResult;
 use crate::adapter::Storage;
 use crate::domain::types::asset_key::AssetKey;
 use crate::errors::Kind::*;
 use crate::infra::s3::types::HeadObjectResponse;
-use crate::AppResult;
 use async_trait::async_trait;
+use aws_sdk_s3::Client;
 use aws_sdk_s3::error::SdkError;
 use aws_sdk_s3::operation::get_object::GetObjectError;
 use aws_sdk_s3::presigning::PresigningConfig;
-use aws_sdk_s3::Client;
 use bytes::Bytes;
 use http::Uri;
 use std::time::Duration;

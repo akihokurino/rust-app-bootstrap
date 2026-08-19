@@ -1,11 +1,11 @@
+use crate::AppResult;
 use crate::adapter::ImageCdn;
 use crate::domain::types::asset_key::AssetKey;
 use crate::domain::types::image_size::ImageSize;
 use crate::errors::Kind::*;
-use crate::AppResult;
 use async_graphql::async_trait::async_trait;
 use base64::prelude::*;
-use cloudfront_sign::{get_signed_url, SignedOptions};
+use cloudfront_sign::{SignedOptions, get_signed_url};
 use http::Uri;
 use std::borrow::Cow;
 use std::time::Duration;

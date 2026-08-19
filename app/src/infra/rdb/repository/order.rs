@@ -1,3 +1,4 @@
+use crate::AppResult;
 use crate::adapter::DbConn;
 use crate::domain::order::{Id, Order, OrderRepository};
 use crate::domain::user;
@@ -5,9 +6,8 @@ use crate::errors::Kind::Internal;
 use crate::infra::rdb::generated::orders;
 use crate::infra::rdb::generated::prelude::*;
 use crate::infra::rdb::repository;
-use crate::AppResult;
 use async_trait::async_trait;
-use sea_orm::{entity::prelude::*, QueryFilter, QueryOrder};
+use sea_orm::{QueryFilter, QueryOrder, entity::prelude::*};
 
 impl TryFrom<orders::Model> for Order {
     type Error = String;

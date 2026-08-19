@@ -1,11 +1,11 @@
+use crate::graphql::GraphResult;
 use crate::graphql::data_loader::{OrderDataLoader, UserDataLoader};
+use crate::graphql::service::AppContext;
 use crate::graphql::service::types::order::{Order, OrderPayload};
 use crate::graphql::service::types::user::{Me, MePayload, User, UserListPayload, UserPayload};
-use crate::graphql::service::AppContext;
-use crate::graphql::GraphResult;
 use app::domain::types::image_size::ImageSize;
 use app::errors::Kind::BadRequest;
-use async_graphql::{Context, MergedObject, Object, ID};
+use async_graphql::{Context, ID, MergedObject, Object};
 
 #[derive(MergedObject, Default)]
 pub struct QueryRoot(DefaultQuery);

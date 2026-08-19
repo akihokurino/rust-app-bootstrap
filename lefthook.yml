@@ -1,4 +1,8 @@
 pre-commit:
   jobs:
+    - name: fmt
+      glob: "*.rs"
+      run: cargo fmt --all
+      stage_fixed: true
     - name: build
       run: cargo build

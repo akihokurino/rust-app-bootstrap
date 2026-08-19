@@ -37,6 +37,10 @@ build-SyncFunction:
 build-BatchFunction:
 	cp bootstrap $(ARTIFACTS_DIR)/bootstrap
 
+.PHONY: fmt
+fmt:
+	cargo fmt --all
+
 .PHONY: build
 build: $(addprefix $(BIN_OUTPUT_DIR)/,$(DEPLOY_CRATES))
 

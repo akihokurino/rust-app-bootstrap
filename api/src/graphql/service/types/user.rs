@@ -1,9 +1,9 @@
+use crate::graphql::GraphResult;
 use crate::graphql::service::types::order::Order;
 use crate::graphql::shared::types::enum_value::Gender;
 use crate::graphql::shared::types::{Date, DateTime};
-use crate::graphql::GraphResult;
 use app::domain;
-use async_graphql::{Context, Object, ID};
+use async_graphql::{Context, ID, Object};
 use derive_more::From;
 
 #[derive(Debug, Clone, From)]
